@@ -23,13 +23,27 @@ public class ProjectService {
         return projectRepository.findByOwnerEmail(email);
     }
 
-    public Project getProjectById(Long id) {
-        return projectRepository.findById(id)
+    public Project getProjectById(Long id, String email) {
+
+        Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        return project;
     }
 
-    public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
-    }
+    public void deleteProject(Long id, String email) {
 
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        projectRepository.delete(project);
+    }
 }

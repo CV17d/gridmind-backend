@@ -40,14 +40,24 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public Project getProject(@PathVariable Long id) {
-
-        return projectService.getProjectById(id);
+    public Project getProject(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+    
+        String email = authentication.getName();
+    
+        return projectService.getProjectById(id, email);
     }
-
+    
     @DeleteMapping("/{id}")
-    public void deleteProject(@PathVariable Long id) {
-
-        projectService.deleteProject(id);
+    public void deleteProject(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+    
+        String email = authentication.getName();
+    
+        projectService.deleteProject(id, email);
     }
 }
