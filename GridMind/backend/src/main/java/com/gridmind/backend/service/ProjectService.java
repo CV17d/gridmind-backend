@@ -3,6 +3,8 @@ package com.gridmind.backend.service;
 import com.gridmind.backend.model.Project;
 import com.gridmind.backend.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
+import com.gridmind.backend.exception.AccessDeniedException;
+import com.gridmind.backend.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -26,10 +28,10 @@ public class ProjectService {
     public Project getProjectById(Long id, String email) {
 
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         return project;
@@ -38,10 +40,10 @@ public class ProjectService {
     public void deleteProject(Long id, String email) {
 
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         projectRepository.delete(project);
@@ -49,10 +51,10 @@ public class ProjectService {
     public Project updateProject(Long id, Project updatedProject, String email) {
 
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
     
         if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
     
         project.setName(updatedProject.getName());
