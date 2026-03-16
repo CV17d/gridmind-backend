@@ -60,4 +60,17 @@ public class ProjectController {
     
         projectService.deleteProject(id, email);
     }
+
+    @PutMapping("/{id}")
+    public Project updateProject(
+            @PathVariable Long id,
+            @RequestBody Project project,
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        return projectService.updateProject(id, project, email);
+    }
+  
 }

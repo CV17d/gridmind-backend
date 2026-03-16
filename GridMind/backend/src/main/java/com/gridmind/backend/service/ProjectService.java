@@ -46,4 +46,18 @@ public class ProjectService {
 
         projectRepository.delete(project);
     }
+    public Project updateProject(Long id, Project updatedProject, String email) {
+
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+    
+        if (!project.getOwnerEmail().equalsIgnoreCase(email)) {
+            throw new RuntimeException("Access denied");
+        }
+    
+        project.setName(updatedProject.getName());
+        project.setDescription(updatedProject.getDescription());
+    
+        return projectRepository.save(project);
+    }
 }
