@@ -3,7 +3,6 @@ package com.gridmind.backend.service;
 import com.gridmind.backend.model.Device;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.DeviceRepository;
-import com.gridmind.backend.service.UserService;
 import com.gridmind.backend.exception.AccessDeniedException;
 import com.gridmind.backend.exception.ResourceNotFoundException;
 
