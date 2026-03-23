@@ -9,4 +9,7 @@ import java.util.List;
 public interface DeviceRepository extends JpaRepository<Device, Long> {
 
     List<Device> findByUser(User user);
+
+    // Spring Boot escribirá el código SQL equivalente solito
+    java.util.Optional<Device> findByEsp32Id(String esp32Id);
 }

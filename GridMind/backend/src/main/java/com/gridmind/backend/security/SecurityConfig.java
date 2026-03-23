@@ -30,6 +30,7 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/login", "/api/users/register").permitAll()
+                .requestMatchers("/api/iot/**").permitAll() // <--- EL PASE VIP PARA LAS MÁQUINAS
                 .anyRequest().authenticated()
             )
 

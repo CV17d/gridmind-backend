@@ -9,6 +9,7 @@ import com.gridmind.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DeviceService {
@@ -27,6 +28,9 @@ public class DeviceService {
         User user = userService.findByEmail(email);
 
         device.setUser(user);
+
+        // Le asignamos un código UUID único y aleatorio de 36 caracteres a la placa
+        device.setApiKey(UUID.randomUUID().toString());
 
         return deviceRepository.save(device);
     }

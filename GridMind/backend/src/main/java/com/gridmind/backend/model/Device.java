@@ -17,6 +17,9 @@ public class Device {
 
     private Double powerRating; // Watts
 
+    @Column(unique = true, updatable = false)
+    private String apiKey;
+
     @Column(unique = true)
     private String esp32Id;
 
@@ -26,25 +29,63 @@ public class Device {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Device() {}
+    public Device() {
+    }
 
     // Getters y Setters
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public Double getPowerRating() { return powerRating; }
-    public void setPowerRating(Double powerRating) { this.powerRating = powerRating; }
+    public String getType() {
+        return type;
+    }
 
-    public String getEsp32Id() { return esp32Id; }
-    public void setEsp32Id(String esp32Id) { this.esp32Id = esp32Id; }
+    public void setType(String type) {
+        this.type = type;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Double getPowerRating() {
+        return powerRating;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public void setPowerRating(Double powerRating) {
+        this.powerRating = powerRating;
+    }
+
+    public String getEsp32Id() {
+        return esp32Id;
+    }
+
+    public void setEsp32Id(String esp32Id) {
+        this.esp32Id = esp32Id;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 }
