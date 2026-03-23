@@ -31,6 +31,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/login", "/api/users/register").permitAll()
                 .requestMatchers("/api/iot/**").permitAll() // <--- EL PASE VIP PARA LAS MÁQUINAS
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
 
