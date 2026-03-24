@@ -19,4 +19,4 @@ server:
 
 gemini:
   api:
-    key: "AIzaSyCfTu35ZT2VWO_ICZQ-HewhTFHUGBCc5KM"
+    key: ${GEMINI_API_KEY}
