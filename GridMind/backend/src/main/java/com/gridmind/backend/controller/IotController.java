@@ -4,6 +4,7 @@ import com.gridmind.backend.model.EnergyConsumption;
 import com.gridmind.backend.repository.DeviceRepository;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.service.AlertService;
+import com.gridmind.backend.service.WebSocketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +13,16 @@ import org.springframework.web.bind.annotation.*;
 public class IotController {
     private final DeviceRepository deviceRepository;
     private final EnergyConsumptionRepository energyRepository;
-    private final AlertService alertService; // 🚨 NUEVO
+    private final AlertService alertService;
+    private final WebSocketService webSocketService; // 📡 NUEVO
     public IotController(DeviceRepository deviceRepository, 
                          EnergyConsumptionRepository energyRepository,
-                         AlertService alertService) { // 🚨 NUEVO
+                         AlertService alertService,
+                         WebSocketService webSocketService) { // 📡 NUEVO
         this.deviceRepository = deviceRepository;
         this.energyRepository = energyRepository;
-        this.alertService = alertService; // 🚨 NUEVO
+        this.alertService = alertService;
+        this.webSocketService = webSocketService; // 📡 NUEVO
     }
     @PostMapping("/energy/{esp32Id}")
     public ResponseEntity<String> registerIotConsumption(
@@ -36,6 +40,8 @@ public class IotController {
         energyRepository.save(ec);
         // 🚨 EL VIGILANTE: Revisa si este consumo dispara una alerta
         alertService.checkAndTriggerAlert(device.getUser(), consumption);
+        // 📡 Transmitir en vivo a todos los dashboards conectados
+        webSocketService.broadcastEnergyReading(esp32Id, consumption);
         return ResponseEntity.ok("Lectura de energía guardada con éxito por GridMind");
     }
 }
