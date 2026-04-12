@@ -14,9 +14,27 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: "smtp.gmail.com"
+
 server:
   port: 8080
 
 gemini:
   api:
     key: ${GEMINI_API_KEY}
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}

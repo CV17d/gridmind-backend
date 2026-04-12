@@ -21,6 +21,10 @@ public class User {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpiry;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Device> devices;
 
@@ -39,4 +43,10 @@ public class User {
     public void setPassword(String password) { this.password = password; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 }

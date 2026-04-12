@@ -3,6 +3,8 @@ package com.gridmind.backend.controller;
 import com.gridmind.backend.dto.RegisterUserRequest;
 import com.gridmind.backend.dto.LoginRequest;
 import com.gridmind.backend.dto.LoginResponse;
+import com.gridmind.backend.dto.ForgotPasswordRequest;
+import com.gridmind.backend.dto.ResetPasswordRequest;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.service.UserService;
 import com.gridmind.backend.security.JwtService;
@@ -50,5 +52,21 @@ public class UserController {
         String email = authentication.getName();
 
         return userService.findByEmail(email);
+    }
+
+    @PostMapping("/forgot-password")
+    public java.util.Map<String, String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        userService.processForgotPassword(request.getEmail());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Si el correo está registrado, se enviarán las instrucciones para restablecer tu cuenta de GridMind.");
+        return response;
+    }
+
+    @PostMapping("/reset-password")
+    public java.util.Map<String, String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        userService.resetPassword(request.getToken(), request.getNewPassword());
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Password successfully reset.");
+        return response;
     }
 }
