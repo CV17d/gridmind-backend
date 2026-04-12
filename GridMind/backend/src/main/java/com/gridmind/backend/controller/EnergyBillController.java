@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.MediaType;
+
 @RestController
 @RequestMapping("/api/v1/bills")
 public class EnergyBillController {
@@ -67,5 +69,19 @@ public class EnergyBillController {
             .collect(Collectors.toList());
             
         return ResponseEntity.ok(billDTOs);
+    }
+    
+    // 🔍 Endpoint para recuperar la foto de forma segura
+    @GetMapping("/{id}/image")
+    public ResponseEntity<?> getBillImage(@PathVariable Long id, Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            byte[] imageBytes = billService.getBillImageAsBytes(id, email);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG) // Generalmente retornamos JPEG/PNG interpretado por el navegador
+                    .body(imageBytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 }

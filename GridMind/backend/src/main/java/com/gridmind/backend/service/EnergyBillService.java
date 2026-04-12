@@ -93,4 +93,24 @@ public class EnergyBillService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return billRepository.findByUserOrderByUploadedAtDesc(user);
     }
+
+    // 🖼️ 4. Obtener la imagen fotográfica de la factura
+    public byte[] getBillImageAsBytes(Long billId, String userEmail) throws Exception {
+        User user = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+        EnergyBill bill = billRepository.findById(billId)
+            .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+            
+        if (!bill.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Acceso denegado: No tienes permiso para ver la foto de esta factura");
+        }
+        
+        Path imagePath = Paths.get(bill.getFileUrl());
+        if (!Files.exists(imagePath)) {
+            throw new RuntimeException("El archivo físico de la foto ya no existe en el servidor");
+        }
+        
+        return Files.readAllBytes(imagePath);
+    }
 }
