@@ -1,22 +1,33 @@
 package com.gridmind.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
     @Autowired
-    private JavaMailSender mailSender;
+    private RestTemplate restTemplate;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
+
+    @Value("${app.resend.api-key}")
+    private String resendApiKey;
+
+    @Value("${app.resend.from-email}")
+    private String fromEmail;
+
+    private static final String RESEND_API_URL = "https://api.resend.com/emails";
 
     public void sendPasswordResetEmail(String toEmail, String token) {
         String resetLink = frontendUrl + "/reset-password/" + token;
@@ -34,17 +45,24 @@ public class EmailService {
                 "<p style='color: #8b9bb4; font-size: 12px; text-align: center; border-top: 1px solid #1a2235; padding-top: 20px;'>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>" +
                 "</div>";
 
+        // Preparar la petición para Resend
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("from", fromEmail);
+        body.put("to", List.of(toEmail));
+        body.put("subject", "GridMind: Restablecimiento de contraseña");
+        body.put("html", htmlContent);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setTo(toEmail);
-            helper.setSubject("GridMind: Restablecimiento de contraseña");
-            helper.setText(htmlContent, true);
-            
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error al enviar el correo electrónico.", e);
+            restTemplate.postForEntity(RESEND_API_URL, request, Map.class);
+        } catch (Exception e) {
+            System.err.println("Error enviando email vía Resend: " + e.getMessage());
+            throw new RuntimeException("Error al enviar el correo electrónico vía API.", e);
         }
     }
 }
