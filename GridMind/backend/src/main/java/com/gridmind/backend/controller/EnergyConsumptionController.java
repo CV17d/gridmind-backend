@@ -11,7 +11,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/energy")
+@RequestMapping("/api/v1/energy")
 public class EnergyConsumptionController {
 
     private final EnergyConsumptionService service;

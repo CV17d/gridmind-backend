@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 @RestController
-@RequestMapping("/api/iot")
+@RequestMapping("/api/v1/iot")
 public class IotController {
     private final DeviceRepository deviceRepository;
     private final EnergyConsumptionRepository energyRepository;

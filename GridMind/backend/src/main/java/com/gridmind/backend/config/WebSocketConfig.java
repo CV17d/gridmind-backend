@@ -17,7 +17,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Esta es la URL donde el Frontend se "conecta" al WebSocket
-        registry.addEndpoint("/ws")
+        registry.addEndpoint("/api/v1/ws")
                 .setAllowedOriginPatterns("*"); // Permite conexiones desde cualquier dominio
     }
 }

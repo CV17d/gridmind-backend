@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/api/v1/devices")
 public class DeviceController {
 
     private final DeviceService deviceService;

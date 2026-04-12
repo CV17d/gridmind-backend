@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/bills")
+@RequestMapping("/api/v1/bills")
 public class EnergyBillController {
     
     private final EnergyBillService billService;

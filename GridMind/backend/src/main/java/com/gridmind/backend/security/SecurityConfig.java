@@ -36,12 +36,12 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/login", "/api/users/register").permitAll()
-                .requestMatchers("/api/iot/**").permitAll()
+                .requestMatchers("/api/v1/users/login", "/api/v1/users/register").permitAll()
+                .requestMatchers("/api/v1/iot/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
-                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/api/v1/ws/**").permitAll()
                 .anyRequest().authenticated()
             )
 
