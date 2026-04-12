@@ -81,7 +81,12 @@ public class EnergyBillController {
                     .contentType(MediaType.IMAGE_JPEG) // Generalmente retornamos JPEG/PNG interpretado por el navegador
                     .body(imageBytes);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            // Si es un error de permisos real:
+            if (e.getMessage() != null && e.getMessage().contains("Acceso denegado")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            }
+            // Si la imagen ya no existe físicamente (404 Not Found) para no desloguear al usuario
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Imagen no disponible: " + e.getMessage());
         }
     }
 }
