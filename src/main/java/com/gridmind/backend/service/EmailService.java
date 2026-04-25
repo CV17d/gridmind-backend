@@ -30,11 +30,6 @@ public class EmailService {
     private static final String RESEND_API_URL = "https://api.resend.com/emails";
 
     public void sendPasswordResetEmail(String toEmail, String token) {
-        if (resendApiKey == null || resendApiKey.trim().isEmpty()) {
-            System.err.println("SKIPPING EMAIL: Resend API Key is not configured. Reset token for " + toEmail + " is: " + token);
-            return;
-        }
-
         String resetLink = frontendUrl + "/reset-password/" + token;
         
         String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0d1219; color: #ffffff; padding: 40px; border-radius: 12px; border: 1px solid #1a2235;'>" +
