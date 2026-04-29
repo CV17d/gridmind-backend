@@ -16,8 +16,8 @@ public class PredictiveService {
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
     
-    // URL del microservicio de Python
-    private final String IA_SERVICE_URL = "http://localhost:5000/predict";
+    @org.springframework.beans.factory.annotation.Value("${ia.service.url:http://localhost:5000/predict}")
+    private String iaServiceUrl;
 
     public PredictiveService(EnergyConsumptionRepository energyRepository, UserRepository userRepository) {
         this.energyRepository = energyRepository;
@@ -49,12 +49,12 @@ public class PredictiveService {
         request.put("history", formattedHistory);
 
         try {
-            System.out.println("🧠 IA: Solicitando predicción al microservicio de Python...");
-            Map<String, Object> response = restTemplate.postForObject(IA_SERVICE_URL, request, Map.class);
+            System.out.println("🧠 IA: Solicitando predicción al microservicio de Python en: " + iaServiceUrl);
+            Map<String, Object> response = restTemplate.postForObject(iaServiceUrl, request, Map.class);
             System.out.println("🧠 IA: Predicción recibida con éxito.");
             return response;
         } catch (Exception e) {
-            System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + IA_SERVICE_URL);
+            System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + iaServiceUrl);
             return Map.of("error", "El servicio de IA no responde.");
         }
     }
