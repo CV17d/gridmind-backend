@@ -9,11 +9,14 @@ public class WebSocketService {
         this.messagingTemplate = messagingTemplate;
     }
     // 📡 Transmite una lectura de energía EN VIVO a todos los que estén escuchando
-    public void broadcastEnergyReading(String esp32Id, Double consumption) {
+    public void broadcastEnergyReading(String esp32Id, Double consumption, Double voltage, Double current, Double power) {
         messagingTemplate.convertAndSend("/topic/energy", 
             Map.of(
                 "esp32Id", esp32Id,
                 "consumption", consumption,
+                "voltage", voltage != null ? voltage : 0.0,
+                "current", current != null ? current : 0.0,
+                "power", power != null ? power : 0.0,
                 "timestamp", java.time.LocalDateTime.now().toString()
             )
         );

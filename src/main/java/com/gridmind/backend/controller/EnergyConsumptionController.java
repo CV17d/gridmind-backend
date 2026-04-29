@@ -32,6 +32,9 @@ public class EnergyConsumptionController {
         return new EnergyConsumptionDTO(
                 savedEc.getId(),
                 savedEc.getConsumption(),
+                savedEc.getVoltage(),
+                savedEc.getCurrent(),
+                savedEc.getPower(),
                 savedEc.getTimestamp(),
                 savedEc.getDevice().getId(),
                 savedEc.getDevice().getName());
@@ -49,6 +52,9 @@ public class EnergyConsumptionController {
         return rawPage.map(ec -> new EnergyConsumptionDTO(
                 ec.getId(),
                 ec.getConsumption(),
+                ec.getVoltage(),
+                ec.getCurrent(),
+                ec.getPower(),
                 ec.getTimestamp(),
                 ec.getDevice().getId(),
                 ec.getDevice().getName()));

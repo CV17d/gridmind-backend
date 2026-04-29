@@ -28,7 +28,10 @@ public class IotController {
     public ResponseEntity<String> registerIotConsumption(
             @PathVariable("esp32Id") String esp32Id,
             @RequestHeader("X-API-KEY") String apiKey,
-            @RequestParam("consumption") Double consumption) {
+            @RequestParam("consumption") Double consumption,
+            @RequestParam(value = "voltage", required = false) Double voltage,
+            @RequestParam(value = "current", required = false) Double current,
+            @RequestParam(value = "power", required = false) Double power) {
         Device device = deviceRepository.findByEsp32Id(esp32Id).orElse(null);
         if (device == null || !device.getApiKey().equals(apiKey)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -36,12 +39,15 @@ public class IotController {
         }
         EnergyConsumption ec = new EnergyConsumption();
         ec.setConsumption(consumption);
+        ec.setVoltage(voltage);
+        ec.setCurrent(current);
+        ec.setPower(power);
         ec.setDevice(device);
         energyRepository.save(ec);
         // 🚨 EL VIGILANTE: Revisa si este consumo dispara una alerta
         alertService.checkAndTriggerAlert(device.getUser(), consumption);
         // 📡 Transmitir en vivo a todos los dashboards conectados
-        webSocketService.broadcastEnergyReading(esp32Id, consumption);
+        webSocketService.broadcastEnergyReading(esp32Id, consumption, voltage, current, power);
         return ResponseEntity.ok("Lectura de energía guardada con éxito por GridMind");
     }
 }

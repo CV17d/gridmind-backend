@@ -18,6 +18,8 @@ public class User {
     private String email;
 
     private String password;
+    
+    private String role = "USER"; // Default role
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -41,6 +43,9 @@ public class User {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 
