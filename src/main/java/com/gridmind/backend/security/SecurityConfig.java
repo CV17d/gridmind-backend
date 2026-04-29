@@ -37,6 +37,7 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/users/login", "/api/v1/users/register", "/api/v1/users/forgot-password", "/api/v1/users/reset-password").permitAll()
                 .requestMatchers("/api/v1/iot/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
@@ -73,6 +74,8 @@ public class SecurityConfig {
             "https://*.onrender.com",
             "https://*.vercel.app",
             "https://gridmind.lat",
+            "https://*.gridmind.lat",
+            "https://app.gridmind.lat",
             "https://www.gridmind.lat"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
