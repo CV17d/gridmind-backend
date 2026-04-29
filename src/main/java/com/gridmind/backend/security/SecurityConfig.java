@@ -71,6 +71,7 @@ public class SecurityConfig {
             "http://localhost:5175",
             "http://localhost:3000",
             "https://*.onrender.com",
+            "https://*.vercel.app",
             "https://gridmind.lat",
             "https://www.gridmind.lat"
         ));
