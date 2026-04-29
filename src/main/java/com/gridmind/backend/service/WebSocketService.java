@@ -31,4 +31,8 @@ public class WebSocketService {
             )
         );
     }
+    // 🧠 Transmite la predicción de la IA
+    public void broadcastForecast(Map<String, Object> forecast) {
+        messagingTemplate.convertAndSend("/topic/forecast", forecast);
+    }
 }

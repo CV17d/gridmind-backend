@@ -5,6 +5,8 @@ import com.gridmind.backend.dto.LoginRequest;
 import com.gridmind.backend.dto.LoginResponse;
 import com.gridmind.backend.dto.ForgotPasswordRequest;
 import com.gridmind.backend.dto.ResetPasswordRequest;
+import com.gridmind.backend.dto.UpdateSettingsRequest;
+import com.gridmind.backend.dto.ChangePasswordRequest;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.service.UserService;
 import com.gridmind.backend.security.JwtService;
@@ -43,7 +45,7 @@ public class UserController {
 
         String token = jwtService.generateToken(user.getEmail());
 
-        return new LoginResponse(token);
+        return new LoginResponse(token, user.getName());
     }
 
     @GetMapping("/me")
@@ -67,6 +69,43 @@ public class UserController {
         userService.resetPassword(request.getToken(), request.getNewPassword());
         java.util.Map<String, String> response = new java.util.HashMap<>();
         response.put("message", "Password successfully reset.");
+        return response;
+    }
+
+    @PutMapping("/settings")
+    public java.util.Map<String, String> updateSettings(
+            @RequestBody UpdateSettingsRequest request,
+            Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email);
+        if (request.getName() != null && !request.getName().isBlank()) {
+            user.setName(request.getName());
+        }
+        if (request.getElectricityRate() != null) {
+            user.setElectricityRate(request.getElectricityRate());
+        }
+        if (request.getAlertThreshold() != null) {
+            user.setAlertThreshold(request.getAlertThreshold());
+        }
+        userService.save(user);
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Ajustes actualizados correctamente.");
+        return response;
+    }
+
+    @PutMapping("/change-password")
+    public java.util.Map<String, String> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email);
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("La contraseña actual es incorrecta.");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userService.save(user);
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", "Contraseña actualizada correctamente.");
         return response;
     }
 }

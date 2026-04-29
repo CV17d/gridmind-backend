@@ -21,6 +21,10 @@ public class User {
     
     private String role = "USER"; // Default role
 
+    private Double electricityRate = 0.12; // Tarifa por kWh en dólares
+
+    private Double alertThreshold = 50.0; // Límite de consumo en kWh para alerta
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private String resetToken;
@@ -54,4 +58,10 @@ public class User {
 
     public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
+
+    public Double getElectricityRate() { return electricityRate; }
+    public void setElectricityRate(Double electricityRate) { this.electricityRate = electricityRate; }
+
+    public Double getAlertThreshold() { return alertThreshold; }
+    public void setAlertThreshold(Double alertThreshold) { this.alertThreshold = alertThreshold; }
 }

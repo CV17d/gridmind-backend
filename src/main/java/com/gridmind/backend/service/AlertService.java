@@ -9,23 +9,48 @@ import java.util.List;
 public class AlertService {
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
-    // El umbral de consumo diario en kWh (Si pasa de esto, ¡alerta!)
+    private final WebSocketService webSocketService;
+
+    // Umbrales de seguridad
     private static final double DAILY_KWH_THRESHOLD = 10.0;
-    public AlertService(AlertRepository alertRepository, UserRepository userRepository) {
+    private static final double VOLTAGE_MIN = 100.0;
+    private static final double VOLTAGE_MAX = 135.0;
+
+    public AlertService(AlertRepository alertRepository, UserRepository userRepository, WebSocketService webSocketService) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
+        this.webSocketService = webSocketService;
     }
-    // 🚨 Método que el IotController llamará cada vez que llegue una lectura
-    public void checkAndTriggerAlert(User user, Double currentConsumption) {
-        if (currentConsumption > DAILY_KWH_THRESHOLD) {
-            Alert alert = new Alert();
-            alert.setUser(user);
-            alert.setType("HIGH_CONSUMPTION");
-            alert.setMessage("⚠️ ¡Alerta GridMind! Se detectó un consumo de " 
-                + currentConsumption + " kWh, superando tu límite de " 
-                + DAILY_KWH_THRESHOLD + " kWh. Revisa tus dispositivos conectados.");
-            alertRepository.save(alert);
+
+    public void checkAndTriggerAlert(User user, String deviceName, Double consumption, Double voltage, Double power) {
+        // 1. Alerta de Consumo Acumulado
+        if (consumption != null && consumption > DAILY_KWH_THRESHOLD) {
+            createAlert(user, "HIGH_CONSUMPTION", "⚠️ Consumo alto en " + deviceName + ": " + consumption + " kWh.");
         }
+
+        // 2. Alerta de Anomalía Eléctrica (Voltaje)
+        if (voltage != null && (voltage < VOLTAGE_MIN || voltage > VOLTAGE_MAX)) {
+            String msg = "⚡ ¡ANOMALÍA DE VOLTAJE! El dispositivo " + deviceName + " registró " + voltage + "V. Riesgo para el hardware.";
+            createAlert(user, "VOLTAGE_ANOMALY", msg);
+        }
+
+        // 3. Alerta de Pico de Potencia (Ejemplo: > 2000W para un socket común)
+        if (power != null && power > 2000.0) {
+            createAlert(user, "POWER_SPIKE", "🔥 PICO DE POTENCIA detectado en " + deviceName + ": " + power + "W.");
+        }
+    }
+
+    private void createAlert(User user, String type, String message) {
+        System.out.println("🔔 DISPARANDO ALERTA: " + type + " -> " + message);
+        Alert alert = new Alert();
+        alert.setUser(user);
+        alert.setType(type);
+        alert.setMessage(message);
+        alertRepository.save(alert);
+        
+        // Notificar en tiempo real por WebSocket
+        System.out.println("📡 Enviando alerta por WebSocket a /topic/alerts...");
+        webSocketService.broadcastAlert(message);
     }
     // 📋 Listar todas las alertas del usuario
     public List<Alert> getMyAlerts(String email) {

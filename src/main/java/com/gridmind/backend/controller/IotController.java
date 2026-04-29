@@ -5,6 +5,7 @@ import com.gridmind.backend.repository.DeviceRepository;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.service.AlertService;
 import com.gridmind.backend.service.WebSocketService;
+import com.gridmind.backend.service.PredictiveService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,15 +15,19 @@ public class IotController {
     private final DeviceRepository deviceRepository;
     private final EnergyConsumptionRepository energyRepository;
     private final AlertService alertService;
-    private final WebSocketService webSocketService; // 📡 NUEVO
+    private final WebSocketService webSocketService;
+    private final PredictiveService predictiveService; // 🧠 NUEVO
+
     public IotController(DeviceRepository deviceRepository, 
                          EnergyConsumptionRepository energyRepository,
                          AlertService alertService,
-                         WebSocketService webSocketService) { // 📡 NUEVO
+                         WebSocketService webSocketService,
+                         PredictiveService predictiveService) {
         this.deviceRepository = deviceRepository;
         this.energyRepository = energyRepository;
         this.alertService = alertService;
-        this.webSocketService = webSocketService; // 📡 NUEVO
+        this.webSocketService = webSocketService;
+        this.predictiveService = predictiveService;
     }
     @PostMapping("/energy/{esp32Id}")
     public ResponseEntity<String> registerIotConsumption(
@@ -45,9 +50,13 @@ public class IotController {
         ec.setDevice(device);
         energyRepository.save(ec);
         // 🚨 EL VIGILANTE: Revisa si este consumo dispara una alerta
-        alertService.checkAndTriggerAlert(device.getUser(), consumption);
+        alertService.checkAndTriggerAlert(device.getUser(), device.getName(), consumption, voltage, power);
         // 📡 Transmitir en vivo a todos los dashboards conectados
         webSocketService.broadcastEnergyReading(esp32Id, consumption, voltage, current, power);
+        
+        // 🧠 Recalcular y transmitir la predicción IA en vivo
+        webSocketService.broadcastForecast(predictiveService.getForecast(device.getUser().getEmail()));
+
         return ResponseEntity.ok("Lectura de energía guardada con éxito por GridMind");
     }
 }

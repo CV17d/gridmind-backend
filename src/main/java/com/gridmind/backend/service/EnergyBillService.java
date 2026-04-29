@@ -44,6 +44,15 @@ public class EnergyBillService {
         bill.setTotalKwh(iaResponse.get("totalKwh").asDouble());
         bill.setTotalAmount(iaResponse.get("totalAmount").asDouble());
         bill.setAiRecommendations(iaResponse.get("advice").asText());
+
+        // D) Auto-guardar tarifa eléctrica extraída por Gemini
+        JsonNode rateNode = iaResponse.get("electricityRate");
+        if (rateNode != null && !rateNode.isNull() && rateNode.asDouble() > 0) {
+            user.setElectricityRate(rateNode.asDouble());
+            userRepository.save(user);
+            System.out.println("⚡ Tarifa eléctrica auto-detectada y guardada: $" + rateNode.asDouble() + "/kWh");
+        }
+
         return billRepository.save(bill);
     }
     // 🧠 2. El puente directo con Google Gemini 1.5
@@ -54,11 +63,12 @@ public class EnergyBillService {
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
         // El 'Prompt' estricto: Le exigimos un JSON puro sin adornos
         String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. " +
-                "Extrae de esta imagen el total de kWh consumidos y el total de la factura a pagar. " +
-                "Genera además un consejo breve y amigable sobre cómo optimizar energía, sugiriendo exactamente en dónde " +
-                "conectar nuestro 'Enchufe Inteligente' o 'Toma de Bombilla' basándote en la factura. " +
-                "Prohibido agregar formato o backticks. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 3 llaves estables: " +
-                "\"totalKwh\" (número decimal), \"totalAmount\" (número decimal), y \"advice\" (texto string).";
+                "Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, " +
+                "y la tarifa eléctrica aplicada (precio por kWh, puede aparecer como 'tarifa', 'precio unitario', 'costo por kWh', etc.). " +
+                "Si no encuentras la tarifa explícita, calcúlala dividiendo el monto de energía entre los kWh. " +
+                "Genera además un consejo breve y amigable sobre cómo optimizar energía. " +
+                "Prohibido agregar formato o backticks. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: " +
+                "\"totalKwh\" (número decimal), \"totalAmount\" (número decimal), \"electricityRate\" (número decimal, tarifa por kWh), y \"advice\" (texto string).";
         // Organizar los mapas anidados tal cual lo exige el manual de Google AI
         Map<String, Object> inlineData = new HashMap<>();
         inlineData.put("mime_type", "image/jpeg");
