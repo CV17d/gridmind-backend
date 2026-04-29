@@ -67,8 +67,13 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
             "http://localhost:3000",
-            "https://*.onrender.com"
+            "https://*.onrender.com",
+            "https://*.vercel.app",
+            "https://gridmind.lat",
+            "https://www.gridmind.lat"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
