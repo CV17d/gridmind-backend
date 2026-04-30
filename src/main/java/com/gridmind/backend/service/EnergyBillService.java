@@ -22,15 +22,12 @@ public class EnergyBillService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    @Value("${grok.api.key}")
-    private String grokApiKey;
-
     public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository) {
         this.billRepository = billRepository;
         this.userRepository = userRepository;
     }
     // 📥 1. Método Principal que atrapa la Foto
-    public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail, String provider) throws Exception {
+    public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail) throws Exception {
         User user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         // A) Guardar foto físicamente
@@ -40,15 +37,8 @@ public class EnergyBillService {
         Path filePath = uploadPath.resolve(uniqueFileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // B) Hablar con la Inteligencia Artificial REAL (Elegida por el usuario)
-        JsonNode iaResponse;
-        if ("grok".equalsIgnoreCase(provider)) {
-            System.out.println("🚀 Usando Grok (xAI) para analizar la factura...");
-            iaResponse = callGrokVisionAPI(filePath);
-        } else {
-            System.out.println("🤖 Usando Gemini (Google) para analizar la factura...");
-            iaResponse = callGeminiVisionAPI(filePath);
-        }
+        // B) Hablar con la Inteligencia Artificial REAL
+        JsonNode iaResponse = callGeminiVisionAPI(filePath);
 
         // C) Guardar Factura Final
         EnergyBill bill = new EnergyBill();
@@ -58,7 +48,7 @@ public class EnergyBillService {
         bill.setTotalAmount(iaResponse.get("totalAmount").asDouble());
         bill.setAiRecommendations(iaResponse.get("advice").asText());
 
-        // D) Auto-guardar tarifa eléctrica extraída por la IA
+        // D) Auto-guardar tarifa eléctrica extraída por Gemini
         JsonNode rateNode = iaResponse.get("electricityRate");
         if (rateNode != null && !rateNode.isNull() && rateNode.asDouble() > 0) {
             user.setElectricityRate(rateNode.asDouble());
@@ -84,32 +74,6 @@ public class EnergyBillService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, parts, JsonNode.class);
         String rawText = response.getBody().path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
-        String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
-        return new ObjectMapper().readTree(cleanJson);
-    }
-
-    // 🚀 2B. El puente con Grok Vision (xAI)
-    private JsonNode callGrokVisionAPI(Path imagePath) throws Exception {
-        String apiUrl = "https://api.xai.com/v1/chat/completions";
-        byte[] imageBytes = Files.readAllBytes(imagePath);
-        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-        String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, y la tarifa eléctrica aplicada. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: \"totalKwh\" (decimal), \"totalAmount\" (decimal), \"electricityRate\" (decimal), y \"advice\" (string). No uses markdown ni explicaciones.";
-
-        Map<String, Object> textContent = Map.of("type", "text", "text", prompt);
-        Map<String, Object> imageContent = Map.of("type", "image_url", "image_url", Map.of("url", "data:image/jpeg;base64," + base64Image));
-        
-        Map<String, Object> message = Map.of("role", "user", "content", List.of(textContent, imageContent));
-        Map<String, Object> requestBody = Map.of("model", "grok-vision-beta", "messages", List.of(message), "stream", false);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(grokApiKey);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, entity, JsonNode.class);
-        
-        String rawText = response.getBody().path("choices").get(0).path("message").path("content").asText();
         String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
         return new ObjectMapper().readTree(cleanJson);
     }

@@ -23,10 +23,9 @@ public class EnergyBillController {
     @PostMapping("/upload")
     public ResponseEntity<EnergyBill> uploadBill(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "provider", defaultValue = "gemini") String provider,
             Authentication authentication) throws Exception {
         String email = authentication.getName();
-        EnergyBill savedBill = billService.analyzeAndSaveBill(file, email, provider);
+        EnergyBill savedBill = billService.analyzeAndSaveBill(file, email);
         return ResponseEntity.ok(savedBill);
     }
 
