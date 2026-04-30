@@ -18,4 +18,4 @@ app:
     from-email: "GridMind <soporte@gridmind.lat>"
 ia:
   service:
-    url: ${IA_SERVICE_URL:https://ia.gridmind.lat/predict}
+    url: ${IA_SERVICE_URL:https://gridmind-ia-production.up.railway.app/predict}
