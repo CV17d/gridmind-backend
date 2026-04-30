@@ -21,12 +21,16 @@ public class EnergyBillService {
     // Spring inyecta la llave secreta que escribiste en tu application.yaml
     @Value("${gemini.api.key}")
     private String geminiApiKey;
+
+    @Value("${grok.api.key}")
+    private String grokApiKey;
+
     public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository) {
         this.billRepository = billRepository;
         this.userRepository = userRepository;
     }
     // 📥 1. Método Principal que atrapa la Foto
-    public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail) throws Exception {
+    public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail, String provider) throws Exception {
         User user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         // A) Guardar foto físicamente
@@ -35,8 +39,17 @@ public class EnergyBillService {
         String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(uniqueFileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-        // B) Hablar con la Inteligencia Artificial REAL
-        JsonNode iaResponse = callGeminiVisionAPI(filePath);
+        
+        // B) Hablar con la Inteligencia Artificial REAL (Elegida por el usuario)
+        JsonNode iaResponse;
+        if ("grok".equalsIgnoreCase(provider)) {
+            System.out.println("🚀 Usando Grok (xAI) para analizar la factura...");
+            iaResponse = callGrokVisionAPI(filePath);
+        } else {
+            System.out.println("🤖 Usando Gemini (Google) para analizar la factura...");
+            iaResponse = callGeminiVisionAPI(filePath);
+        }
+
         // C) Guardar Factura Final
         EnergyBill bill = new EnergyBill();
         bill.setUser(user);
@@ -45,57 +58,60 @@ public class EnergyBillService {
         bill.setTotalAmount(iaResponse.get("totalAmount").asDouble());
         bill.setAiRecommendations(iaResponse.get("advice").asText());
 
-        // D) Auto-guardar tarifa eléctrica extraída por Gemini
+        // D) Auto-guardar tarifa eléctrica extraída por la IA
         JsonNode rateNode = iaResponse.get("electricityRate");
         if (rateNode != null && !rateNode.isNull() && rateNode.asDouble() > 0) {
             user.setElectricityRate(rateNode.asDouble());
             userRepository.save(user);
-            System.out.println("⚡ Tarifa eléctrica auto-detectada y guardada: $" + rateNode.asDouble() + "/kWh");
         }
 
         return billRepository.save(bill);
     }
+
     // 🧠 2. El puente directo con Google Gemini 1.5
     private JsonNode callGeminiVisionAPI(Path imagePath) throws Exception {
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + geminiApiKey;
-        // Convertir la imagen pesada a un formato de texto largo (Base64) que Google pueda entender
         byte[] imageBytes = Files.readAllBytes(imagePath);
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-        // El 'Prompt' estricto: Le exigimos un JSON puro sin adornos
-        String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. " +
-                "Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, " +
-                "y la tarifa eléctrica aplicada (precio por kWh, puede aparecer como 'tarifa', 'precio unitario', 'costo por kWh', etc.). " +
-                "Si no encuentras la tarifa explícita, calcúlala dividiendo el monto de energía entre los kWh. " +
-                "Genera además un consejo breve y amigable sobre cómo optimizar energía. " +
-                "Prohibido agregar formato o backticks. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: " +
-                "\"totalKwh\" (número decimal), \"totalAmount\" (número decimal), \"electricityRate\" (número decimal, tarifa por kWh), y \"advice\" (texto string).";
-        // Organizar los mapas anidados tal cual lo exige el manual de Google AI
-        Map<String, Object> inlineData = new HashMap<>();
-        inlineData.put("mime_type", "image/jpeg");
-        inlineData.put("data", base64Image);
-        Map<String, Object> imagePart = new HashMap<>();
-        imagePart.put("inline_data", inlineData);
-        Map<String, Object> textPart = new HashMap<>();
-        textPart.put("text", prompt);
-        Map<String, Object> partsObj = new HashMap<>();
-        partsObj.put("parts", Arrays.asList(textPart, imagePart));
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("contents", Collections.singletonList(partsObj));
-        // Enviar la petición por la red neuronal
+        String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, y la tarifa eléctrica aplicada. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: \"totalKwh\" (decimal), \"totalAmount\" (decimal), \"electricityRate\" (decimal), y \"advice\" (string). No uses markdown.";
+
+        Map<String, Object> inlineData = Map.of("mime_type", "image/jpeg", "data", base64Image);
+        Map<String, Object> parts = Map.of("contents", List.of(Map.of("parts", List.of(
+            Map.of("text", prompt),
+            Map.of("inline_data", inlineData)
+        ))));
+
         RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, parts, JsonNode.class);
+        String rawText = response.getBody().path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
+        return new ObjectMapper().readTree(cleanJson);
+    }
+
+    // 🚀 2B. El puente con Grok Vision (xAI)
+    private JsonNode callGrokVisionAPI(Path imagePath) throws Exception {
+        String apiUrl = "https://api.xai.com/v1/chat/completions";
+        byte[] imageBytes = Files.readAllBytes(imagePath);
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, y la tarifa eléctrica aplicada. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: \"totalKwh\" (decimal), \"totalAmount\" (decimal), \"electricityRate\" (decimal), y \"advice\" (string). No uses markdown ni explicaciones.";
+
+        Map<String, Object> textContent = Map.of("type", "text", "text", prompt);
+        Map<String, Object> imageContent = Map.of("type", "image_url", "image_url", Map.of("url", "data:image/jpeg;base64," + base64Image));
+        
+        Map<String, Object> message = Map.of("role", "user", "content", List.of(textContent, imageContent));
+        Map<String, Object> requestBody = Map.of("model", "grok-vision-beta", "messages", List.of(message), "stream", false);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(grokApiKey);
+
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
-        // Diseccionar la respuesta de Gemini (Llegar al centro del pastel)
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(response.getBody());
-        String geminiRawText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, entity, JsonNode.class);
         
-        // Limpiamos la basura extra (como los caracteres ```json de formato invisible que la IA a veces incluye)
-        String cleanJson = geminiRawText.replace("```json", "").replace("```", "").trim();
-        System.out.println("🤖 Respuesta de la IA limpia: \n" + cleanJson);
-        return mapper.readTree(cleanJson);
+        String rawText = response.getBody().path("choices").get(0).path("message").path("content").asText();
+        String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
+        return new ObjectMapper().readTree(cleanJson);
     }
     // 📋 3. Obtener el historial
     public List<EnergyBill> getUserBills(String userEmail) {

@@ -20,6 +20,9 @@ server:
 gemini:
   api:
     key: ${GEMINI_API_KEY}
+grok:
+  api:
+    key: ${GROK_API_KEY}
 
 app:
   frontend:
