@@ -12,13 +12,12 @@ server:
 gemini:
   api:
     key: ${GEMINI_API_KEY}
-app:
-  resend:
-    api-key: ${RESEND_API_KEY}
-    from-email: "GridMind <soporte@gridmind.lat>"
 ia:
   service:
     url: ${IA_SERVICE_URL:https://gridmind-ia-production.up.railway.app/predict}
 app:
+  resend:
+    api-key: ${RESEND_API_KEY}
+    from-email: "GridMind <soporte@gridmind.lat>"
   frontend:
     url: ${FRONTEND_URL:https://gridmind-on.vercel.app}
