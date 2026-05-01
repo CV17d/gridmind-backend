@@ -29,15 +29,37 @@ public class PredictiveService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Obtener historial (últimas 1000 lecturas para el modelo)
-        List<EnergyConsumption> history = energyRepository.findHistoryForPrediction(user.getId());
+        // 1. Obtener historial real
+        List<EnergyConsumption> history = new ArrayList<>(energyRepository.findHistoryForPrediction(user.getId()));
 
         if (history.isEmpty()) {
             System.out.println("🧠 IA INFO: El historial para " + email + " está vacío.");
             return Map.of("error", "No hay suficiente historial para predecir");
         }
         
-        System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
+        System.out.println("🧠 IA INFO: Historial real de " + history.size() + " registros para " + email);
+
+        // --- LÓGICA DE SIMULACIÓN (Cebado de IA) ---
+        // Si el historial es muy corto (< 200 puntos), simulamos datos basados en el promedio actual
+        // para que la IA tenga contexto suficiente para predecir de inmediato.
+        if (history.size() > 0 && history.size() < 200) {
+            System.out.println("🧪 IA SIM: Cebando IA con datos sintéticos basados en el promedio actual...");
+            java.math.BigDecimal avgConsumption = history.stream()
+                .map(EnergyConsumption::getConsumption)
+                .filter(Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
+                .divide(new java.math.BigDecimal(history.size()), java.math.MathContext.DECIMAL128);
+            
+            java.time.LocalDateTime earliest = history.get(0).getTimestamp();
+            for (int i = 1; i <= 300; i++) {
+                EnergyConsumption synthetic = new EnergyConsumption();
+                synthetic.setConsumption(avgConsumption);
+                // Simulamos hacia atrás cada 3 segundos
+                synthetic.setTimestamp(earliest.minusSeconds(i * 3));
+                history.add(0, synthetic); // Insertar al inicio para mantener orden ASC
+            }
+            System.out.println("🧪 IA SIM: Historial cebado a " + history.size() + " puntos.");
+        }
 
         // 2. Formatear datos para la IA con AGREGACIÓN POR 5 MINUTOS (PROMEDIO), FILTRO y ESCALADO
         // Agrupamos por 5 minutos para ver tendencias de largo plazo y cubrir más horas de historia
