@@ -7,6 +7,7 @@ import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.repository.UserRepository;
 import com.gridmind.backend.repository.EnergyBillRepository;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -37,11 +38,11 @@ public class AnalyticsService {
         }
 
         EnergyBill latestBill = bills.get(0);
-        Double totalMeasured = consumptionRepository.sumConsumptionByUserId(user.getId());
+        BigDecimal totalMeasured = consumptionRepository.sumConsumptionByUserId(user.getId());
 
         result.put("status", "SUCCESS");
         result.put("billKwh", latestBill.getTotalKwh());
-        result.put("measuredKwh", totalMeasured != null ? totalMeasured : 0.0);
+        result.put("measuredKwh", totalMeasured != null ? totalMeasured : BigDecimal.ZERO);
         result.put("advice", latestBill.getAiRecommendations());
         result.put("uploadedAt", latestBill.getUploadedAt());
         

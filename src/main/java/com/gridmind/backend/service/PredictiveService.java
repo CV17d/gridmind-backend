@@ -29,8 +29,8 @@ public class PredictiveService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Obtener historial (últimas 100 lecturas para el modelo)
-        List<EnergyConsumption> history = energyRepository.findTop100ByUserOrderByTimestampAsc(user.getId());
+        // 1. Obtener historial (últimas 1000 lecturas para el modelo)
+        List<EnergyConsumption> history = energyRepository.findHistoryForPrediction(user.getId());
 
         if (history.isEmpty()) {
             System.out.println("🧠 IA INFO: El historial para " + email + " está vacío.");

@@ -15,11 +15,11 @@ public interface EnergyConsumptionRepository extends JpaRepository<EnergyConsump
 
     Page<EnergyConsumption> findByDevice(Device device, Pageable pageable);
 
-    @Query(value = "SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp DESC LIMIT 500", nativeQuery = true)
-    List<EnergyConsumption> findTop100ByUserOrderByTimestampAsc(@Param("userId") Long userId);
+    @Query(value = "SELECT * FROM (SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp DESC LIMIT 1000) sub ORDER BY timestamp ASC", nativeQuery = true)
+    List<EnergyConsumption> findHistoryForPrediction(@Param("userId") Long userId);
 
-    @Query(value = "SELECT ec.* FROM energy_consumptions ec WHERE ec.device_id = :deviceId ORDER BY ec.timestamp ASC LIMIT 100", nativeQuery = true)
-    List<EnergyConsumption> findTop100ByDeviceOrderByTimestampAsc(@Param("deviceId") Long deviceId);
+    @Query(value = "SELECT ec.* FROM energy_consumptions ec WHERE ec.device_id = :deviceId ORDER BY ec.timestamp ASC LIMIT 500", nativeQuery = true)
+    List<EnergyConsumption> findTop500ByDeviceOrderByTimestampAsc(@Param("deviceId") Long deviceId);
 
     @org.springframework.data.jpa.repository.Query(
         "SELECT DATE(e.timestamp) AS date, SUM(e.consumption) AS totalKwh " +
@@ -33,5 +33,5 @@ public interface EnergyConsumptionRepository extends JpaRepository<EnergyConsump
     );
 
     @Query("SELECT SUM(e.consumption) FROM EnergyConsumption e WHERE e.device.user.id = :userId")
-    Double sumConsumptionByUserId(@Param("userId") Long userId);
+    java.math.BigDecimal sumConsumptionByUserId(@Param("userId") Long userId);
 }
