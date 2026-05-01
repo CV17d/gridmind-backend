@@ -22,9 +22,9 @@ public class AlertService {
         this.webSocketService = webSocketService;
     }
 
-    public void checkAndTriggerAlert(User user, String deviceName, Double consumption, Double voltage, Double power) {
+    public void checkAndTriggerAlert(User user, String deviceName, java.math.BigDecimal consumption, Double voltage, Double power) {
         // 1. Alerta de Consumo Acumulado
-        if (consumption != null && consumption > DAILY_KWH_THRESHOLD) {
+        if (consumption != null && consumption.doubleValue() > DAILY_KWH_THRESHOLD) {
             createAlert(user, "HIGH_CONSUMPTION", "⚠️ Consumo alto en " + deviceName + ": " + consumption + " kWh.");
         }
 

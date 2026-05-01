@@ -41,8 +41,9 @@ public class IotController {
         }
 
         EnergyConsumption ec = new EnergyConsumption();
-        // Ajuste: Si power es W, en 10 segundos el consumo es (W / 1000) * (10 / 3600) kWh
-        ec.setConsumption((request.power / 1000.0) * (10.0 / 3600.0)); 
+        // Ajuste: Calculamos con BigDecimal para no perder decimales en la DB
+        double calc = (request.power / 1000.0) * (10.0 / 3600.0);
+        ec.setConsumption(java.math.BigDecimal.valueOf(calc)); 
         ec.setVoltage(request.voltage);
         ec.setCurrent(request.current);
         ec.setPower(request.power);

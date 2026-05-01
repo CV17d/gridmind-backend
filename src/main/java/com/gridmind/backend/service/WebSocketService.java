@@ -9,7 +9,7 @@ public class WebSocketService {
         this.messagingTemplate = messagingTemplate;
     }
     // 📡 Transmite una lectura de energía EN VIVO a todos los que estén escuchando
-    public void broadcastEnergyReading(String esp32Id, Double consumption, Double voltage, Double current, Double power) {
+    public void broadcastEnergyReading(String esp32Id, Object consumption, Double voltage, Double current, Double power) {
         messagingTemplate.convertAndSend("/topic/energy", 
             Map.of(
                 "esp32Id", esp32Id,

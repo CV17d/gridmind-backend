@@ -11,8 +11,8 @@ public class EnergyConsumption {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(precision = 15, scale = 10)
-    private Double consumption; // kWh (Total acumulado o de la sesión)
+    @Column(precision = 19, scale = 10)
+    private java.math.BigDecimal consumption; // kWh (Precisión extrema para IoT)
     
     private Double voltage; // V
     private Double current; // A
@@ -31,11 +31,10 @@ public class EnergyConsumption {
         return id;
     }
 
-    public Double getConsumption() {
+    public java.math.BigDecimal getConsumption() {
         return consumption;
     }
-
-    public void setConsumption(Double consumption) {
+    public void setConsumption(java.math.BigDecimal consumption) {
         this.consumption = consumption;
     }
 
