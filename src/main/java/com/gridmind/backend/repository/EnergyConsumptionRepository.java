@@ -15,7 +15,7 @@ public interface EnergyConsumptionRepository extends JpaRepository<EnergyConsump
 
     Page<EnergyConsumption> findByDevice(Device device, Pageable pageable);
 
-    @Query(value = "SELECT * FROM (SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp DESC LIMIT 1000) sub ORDER BY timestamp ASC", nativeQuery = true)
+    @Query(value = "SELECT * FROM (SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp DESC LIMIT 10000) sub ORDER BY timestamp ASC", nativeQuery = true)
     List<EnergyConsumption> findHistoryForPrediction(@Param("userId") Long userId);
 
     @Query(value = "SELECT ec.* FROM energy_consumptions ec WHERE ec.device_id = :deviceId ORDER BY ec.timestamp ASC LIMIT 500", nativeQuery = true)

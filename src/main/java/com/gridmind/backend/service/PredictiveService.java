@@ -39,13 +39,18 @@ public class PredictiveService {
         
         System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
-        // 2. Formatear datos para la IA con AGREGACIÓN POR MINUTO (PROMEDIO), FILTRO y ESCALADO
-        // Usamos el promedio por minuto para mantener la escala original pero con menos ruido
+        // 2. Formatear datos para la IA con AGREGACIÓN POR 5 MINUTOS (PROMEDIO), FILTRO y ESCALADO
+        // Agrupamos por 5 minutos para ver tendencias de largo plazo y cubrir más horas de historia
         Map<String, List<java.math.BigDecimal>> grouped = new LinkedHashMap<>();
         for (EnergyConsumption ec : history) {
             if (ec.getConsumption() == null || ec.getConsumption().compareTo(new java.math.BigDecimal("0.01")) >= 0) continue;
-            String minuteKey = ec.getTimestamp().withSecond(0).withNano(0).toString();
-            grouped.computeIfAbsent(minuteKey, k -> new ArrayList<>()).add(ec.getConsumption());
+            
+            // Truncar a bloques de 5 minutos
+            int minutes = ec.getTimestamp().getMinute();
+            int truncatedMinutes = (minutes / 5) * 5;
+            String key = ec.getTimestamp().withMinute(truncatedMinutes).withSecond(0).withNano(0).toString();
+            
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(ec.getConsumption());
         }
 
         List<Map<String, Object>> formattedHistory = grouped.entrySet().stream().map(entry -> {
@@ -59,7 +64,7 @@ public class PredictiveService {
             return map;
         }).collect(Collectors.toList());
 
-        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos promedio (minutos) a la IA.");
+        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos promedio (5 min) a la IA.");
 
         // 3. Llamar al microservicio de Python
         Map<String, Object> request = new HashMap<>();
