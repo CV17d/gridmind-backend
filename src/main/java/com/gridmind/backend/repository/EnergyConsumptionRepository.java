@@ -15,7 +15,7 @@ public interface EnergyConsumptionRepository extends JpaRepository<EnergyConsump
 
     Page<EnergyConsumption> findByDevice(Device device, Pageable pageable);
 
-    @Query(value = "SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp ASC LIMIT 100", nativeQuery = true)
+    @Query(value = "SELECT ec.* FROM energy_consumptions ec JOIN devices d ON ec.device_id = d.id WHERE d.user_id = :userId ORDER BY ec.timestamp DESC LIMIT 100", nativeQuery = true)
     List<EnergyConsumption> findTop100ByUserOrderByTimestampAsc(@Param("userId") Long userId);
 
     @Query(value = "SELECT ec.* FROM energy_consumptions ec WHERE ec.device_id = :deviceId ORDER BY ec.timestamp ASC LIMIT 100", nativeQuery = true)
