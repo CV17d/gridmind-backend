@@ -39,7 +39,8 @@ public class PredictiveService {
         // 2. Formatear datos para la IA
         List<Map<String, Object>> formattedHistory = history.stream().map(ec -> {
             Map<String, Object> map = new HashMap<>();
-            map.put("timestamp", ec.getTimestamp().toString());
+            // Formato ISO-8601 estándar para que Python lo entienda perfecto
+            map.put("timestamp", ec.getTimestamp().toString()); 
             map.put("consumption", ec.getConsumption());
             return map;
         }).collect(Collectors.toList());

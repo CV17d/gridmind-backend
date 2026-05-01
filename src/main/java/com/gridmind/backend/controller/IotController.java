@@ -41,7 +41,8 @@ public class IotController {
         }
 
         EnergyConsumption ec = new EnergyConsumption();
-        ec.setConsumption(request.power / 1000.0); // Convertimos W a kWh (estimado por hora)
+        // Ajuste: Si power es W, en 10 segundos el consumo es (W / 1000) * (10 / 3600) kWh
+        ec.setConsumption((request.power / 1000.0) * (10.0 / 3600.0)); 
         ec.setVoltage(request.voltage);
         ec.setCurrent(request.current);
         ec.setPower(request.power);
