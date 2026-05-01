@@ -104,10 +104,15 @@ public class PredictiveService {
                 Object rawValue = response.get("predicted_next_30_days");
                 double value = (rawValue instanceof Number) ? ((Number) rawValue).doubleValue() : 0.0;
                 // La IA predice en la escala enviada (Wh). Convertimos a kWh.
-                normalizedResponse.put("prediction", value / 1000.0);
+                double convertedValue = value / 1000.0;
+                normalizedResponse.put("prediction", convertedValue);
+                // Sobrescribimos la clave original para que el frontend no lea el valor sin dividir
+                normalizedResponse.put("predicted_next_30_days", convertedValue);
             } else {
                 normalizedResponse.put("prediction", 0.0);
+                normalizedResponse.put("predicted_next_30_days", 0.0);
             }
+
             
             return normalizedResponse;
         } catch (Exception e) {
