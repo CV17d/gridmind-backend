@@ -39,34 +39,43 @@ public class PredictiveService {
         
         System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
-        // 2. Formatear datos para la IA con FILTRO DE SANIDAD EXTREMO y ESCALADO (x1000)
-        // Escalamos a Wh para que la IA no trabaje con floats tan pequeños que causen inestabilidad (0.0)
-        List<Map<String, Object>> formattedHistory = history.stream()
-            .filter(ec -> ec.getConsumption() != null && ec.getConsumption().compareTo(new java.math.BigDecimal("0.01")) < 0)
-            .map(ec -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("timestamp", ec.getTimestamp().toString()); 
-                // Enviamos en Wh (x1000) para mayor estabilidad numérica en el modelo de IA
-                map.put("consumption", ec.getConsumption().multiply(new java.math.BigDecimal("1000")));
-                return map;
-            }).collect(Collectors.toList());
+        // 2. Formatear datos para la IA con AGREGACIÓN POR MINUTO, FILTRO y ESCALADO
+        // Agrupamos por minuto para que la IA vea puntos con más "cuerpo" y menos ruido
+        Map<String, java.math.BigDecimal> aggregated = new LinkedHashMap<>();
+        for (EnergyConsumption ec : history) {
+            if (ec.getConsumption() == null || ec.getConsumption().compareTo(new java.math.BigDecimal("0.01")) >= 0) continue;
+            
+            // Truncar a minutos para agrupar
+            String minuteKey = ec.getTimestamp().withSecond(0).withNano(0).toString();
+            aggregated.put(minuteKey, aggregated.getOrDefault(minuteKey, java.math.BigDecimal.ZERO).add(ec.getConsumption()));
+        }
+
+        List<Map<String, Object>> formattedHistory = aggregated.entrySet().stream().map(entry -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("timestamp", entry.getKey()); 
+            // Enviamos en Wh (x1000) para estabilidad
+            map.put("consumption", entry.getValue().multiply(new java.math.BigDecimal("1000")));
+            return map;
+        }).collect(Collectors.toList());
+
+        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos agregados (minutos) a la IA.");
 
         // 3. Llamar al microservicio de Python
         Map<String, Object> request = new HashMap<>();
         request.put("history", formattedHistory);
 
         try {
-            System.out.println("🧠 IA: Solicitando predicción con escalado x1000 para estabilidad...");
+            System.out.println("🧠 IA: Solicitando predicción con agregación por minuto...");
             
             Map<String, Object> response = restTemplate.postForObject(iaServiceUrl, request, Map.class);
             System.out.println("🧠 IA RAW RESPONSE: " + response);
             
-            // NORMALIZACIÓN: El microservicio devuelve la predicción en la misma escala enviada.
-            // Si enviamos Wh, devuelve Wh. Dividimos por 1000 para volver a kWh.
+            // NORMALIZACIÓN
             Map<String, Object> normalizedResponse = new HashMap<>(response);
             if (response.containsKey("predicted_next_30_days")) {
                 Object rawValue = response.get("predicted_next_30_days");
                 double value = (rawValue instanceof Number) ? ((Number) rawValue).doubleValue() : 0.0;
+                // La IA predice en la escala enviada (Wh). Convertimos a kWh.
                 normalizedResponse.put("prediction", value / 1000.0);
             } else {
                 normalizedResponse.put("prediction", 0.0);
