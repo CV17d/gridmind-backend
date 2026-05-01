@@ -12,4 +12,5 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
 
     // Spring Boot escribirá el código SQL equivalente solito
     java.util.Optional<Device> findByEsp32Id(String esp32Id);
+    java.util.Optional<Device> findByApiKey(String apiKey);
 }

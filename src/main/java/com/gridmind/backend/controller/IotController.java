@@ -29,6 +29,42 @@ public class IotController {
         this.webSocketService = webSocketService;
         this.predictiveService = predictiveService;
     }
+    // 📡 Nuevo endpoint para recibir telemetría vía JSON (Más moderno y seguro)
+    @PostMapping("/telemetry")
+    public ResponseEntity<String> receiveTelemetry(@RequestBody TelemetryRequest request) {
+        // Buscamos el dispositivo por su API Key (la llave secreta)
+        Device device = deviceRepository.findByApiKey(request.apiKey).orElse(null);
+
+        if (device == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Error: API Key no reconocida por GridMind");
+        }
+
+        EnergyConsumption ec = new EnergyConsumption();
+        ec.setConsumption(request.power / 1000.0); // Convertimos W a kWh (estimado por hora)
+        ec.setVoltage(request.voltage);
+        ec.setCurrent(request.current);
+        ec.setPower(request.power);
+        ec.setDevice(device);
+        
+        energyRepository.save(ec);
+
+        // Alertas y WebSockets
+        alertService.checkAndTriggerAlert(device.getUser(), device.getName(), ec.getConsumption(), request.voltage, request.power);
+        webSocketService.broadcastEnergyReading(device.getEsp32Id(), ec.getConsumption(), request.voltage, request.current, request.power);
+        webSocketService.broadcastForecast(predictiveService.getForecast(device.getUser().getEmail()));
+
+        return ResponseEntity.ok("Telemetría GridMind recibida con éxito");
+    }
+
+    // Clase auxiliar para el JSON
+    public static class TelemetryRequest {
+        public String apiKey;
+        public Double voltage;
+        public Double current;
+        public Double power;
+    }
+
     @PostMapping("/energy/{esp32Id}")
     public ResponseEntity<String> registerIotConsumption(
             @PathVariable("esp32Id") String esp32Id,
