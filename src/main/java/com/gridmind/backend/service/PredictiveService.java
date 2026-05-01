@@ -56,15 +56,25 @@ public class PredictiveService {
 
         try {
             System.out.println("🧠 IA: Solicitando predicción al microservicio de Python en: " + iaServiceUrl);
-            // Logueamos una muestra de los datos enviados para verificar precisión
             if (!formattedHistory.isEmpty()) {
                 System.out.println("🧠 IA DATA SAMPLE: " + formattedHistory.get(formattedHistory.size()-1));
             }
             
             Map<String, Object> response = restTemplate.postForObject(iaServiceUrl, request, Map.class);
-            System.out.println("🧠 IA RESPONSE: " + response);
+            System.out.println("🧠 IA RAW RESPONSE: " + response);
             
-            return response;
+            // NORMALIZACIÓN: El microservicio devuelve Wh en 'predicted_next_30_days'.
+            // Convertimos a kWh (dividir por 1000) y usamos la llave 'prediction' que el frontend espera.
+            Map<String, Object> normalizedResponse = new HashMap<>(response);
+            if (response.containsKey("predicted_next_30_days")) {
+                Object rawValue = response.get("predicted_next_30_days");
+                double whValue = (rawValue instanceof Number) ? ((Number) rawValue).doubleValue() : 0.0;
+                normalizedResponse.put("prediction", whValue / 1000.0);
+            } else {
+                normalizedResponse.put("prediction", 0.0);
+            }
+            
+            return normalizedResponse;
         } catch (Exception e) {
             System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + iaServiceUrl + ". Error: " + e.getMessage());
             return Map.of("error", "El servicio de IA no responde.");
