@@ -23,9 +23,9 @@ public class AlertService {
     }
 
     public void checkAndTriggerAlert(User user, String deviceName, java.math.BigDecimal consumption, Double voltage, Double power) {
-        // 1. Alerta de Consumo Acumulado
-        if (consumption != null && consumption.doubleValue() > DAILY_KWH_THRESHOLD) {
-            createAlert(user, "HIGH_CONSUMPTION", "⚠️ Consumo alto en " + deviceName + ": " + consumption + " kWh.");
+        // 1. Alerta de Consumo Acumulado (Usando el umbral personalizado del usuario)
+        if (consumption != null && user.getAlertThreshold() != null && consumption.compareTo(user.getAlertThreshold()) > 0) {
+            createAlert(user, "HIGH_CONSUMPTION", "⚠️ Consumo alto en " + deviceName + ": " + consumption + " kWh (Límite: " + user.getAlertThreshold() + ").");
         }
 
         // 2. Alerta de Anomalía Eléctrica (Voltaje)
