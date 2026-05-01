@@ -33,8 +33,11 @@ public class PredictiveService {
         List<EnergyConsumption> history = energyRepository.findTop100ByUserOrderByTimestampAsc(user.getId());
 
         if (history.isEmpty()) {
+            System.out.println("🧠 IA INFO: El historial para " + email + " está vacío.");
             return Map.of("error", "No hay suficiente historial para predecir");
         }
+        
+        System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
         // 2. Formatear datos para la IA
         List<Map<String, Object>> formattedHistory = history.stream().map(ec -> {
