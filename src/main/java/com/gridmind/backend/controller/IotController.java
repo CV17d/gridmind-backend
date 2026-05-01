@@ -9,6 +9,7 @@ import com.gridmind.backend.service.PredictiveService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/v1/iot")
 public class IotController {
@@ -71,7 +72,7 @@ public class IotController {
     public ResponseEntity<String> registerIotConsumption(
             @PathVariable("esp32Id") String esp32Id,
             @RequestHeader("X-API-KEY") String apiKey,
-            @RequestParam("consumption") Double consumption,
+            @RequestParam("consumption") BigDecimal consumption,
             @RequestParam(value = "voltage", required = false) Double voltage,
             @RequestParam(value = "current", required = false) Double current,
             @RequestParam(value = "power", required = false) Double power) {
