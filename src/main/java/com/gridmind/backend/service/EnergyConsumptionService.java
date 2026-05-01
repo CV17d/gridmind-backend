@@ -22,7 +22,7 @@ public class EnergyConsumptionService {
     }
 
     // 🔥 Crear registro de consumo
-    public EnergyConsumption create(Long deviceId, Double consumption, String email) {
+    public EnergyConsumption create(Long deviceId, java.math.BigDecimal consumption, String email) {
 
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found"));

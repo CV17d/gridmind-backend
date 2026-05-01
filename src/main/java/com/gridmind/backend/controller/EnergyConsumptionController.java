@@ -24,7 +24,7 @@ public class EnergyConsumptionController {
     @PostMapping("/{deviceId}")
     public EnergyConsumptionDTO create(
             @PathVariable("deviceId") Long deviceId,
-            @RequestParam("consumption") Double consumption,
+            @RequestParam("consumption") java.math.BigDecimal consumption,
             Authentication authentication) {
         String email = authentication.getName();
         EnergyConsumption savedEc = service.create(deviceId, consumption, email);

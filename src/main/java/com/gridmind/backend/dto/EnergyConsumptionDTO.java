@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record EnergyConsumptionDTO(
         Long id,
-        Double consumption,
+        java.math.BigDecimal consumption,
         Double voltage,
         Double current,
         Double power,
