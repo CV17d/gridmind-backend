@@ -39,10 +39,10 @@ public class PredictiveService {
         
         System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
-        // 2. Formatear datos para la IA con FILTRO DE SANIDAD
-        // Filtramos valores absurdos (> 1.0 kWh en una sola lectura de segundos) que ensucian la predicción
+        // 2. Formatear datos para la IA con FILTRO DE SANIDAD EXTREMO
+        // Filtramos valores > 0.01 kWh (10 Wh) en una sola lectura de segundos para eliminar ruido legacy
         List<Map<String, Object>> formattedHistory = history.stream()
-            .filter(ec -> ec.getConsumption() != null && ec.getConsumption().compareTo(new java.math.BigDecimal("1.0")) < 0)
+            .filter(ec -> ec.getConsumption() != null && ec.getConsumption().compareTo(new java.math.BigDecimal("0.01")) < 0)
             .map(ec -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("timestamp", ec.getTimestamp().toString()); 
