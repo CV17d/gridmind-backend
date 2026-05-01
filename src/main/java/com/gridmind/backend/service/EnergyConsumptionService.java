@@ -3,6 +3,7 @@ package com.gridmind.backend.service;
 import com.gridmind.backend.model.*;
 import com.gridmind.backend.repository.*;
 import com.gridmind.backend.exception.*;
+import java.math.BigDecimal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +23,7 @@ public class EnergyConsumptionService {
     }
 
     // 🔥 Crear registro de consumo
-    public EnergyConsumption create(Long deviceId, java.math.BigDecimal consumption, String email) {
+    public EnergyConsumption create(Long deviceId, BigDecimal consumption, String email) {
 
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found"));
