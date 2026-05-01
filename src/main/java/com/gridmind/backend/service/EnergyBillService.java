@@ -11,7 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.*;
+import java.math.BigDecimal;
 import java.util.*;
+
 @Service
 public class EnergyBillService {
     private final EnergyBillRepository billRepository;
@@ -44,14 +46,14 @@ public class EnergyBillService {
         EnergyBill bill = new EnergyBill();
         bill.setUser(user);
         bill.setFileUrl(filePath.toString());
-        bill.setTotalKwh(iaResponse.get("totalKwh").asDouble());
-        bill.setTotalAmount(iaResponse.get("totalAmount").asDouble());
+        bill.setTotalKwh(new BigDecimal(iaResponse.get("totalKwh").asText()));
+        bill.setTotalAmount(new BigDecimal(iaResponse.get("totalAmount").asText()));
         bill.setAiRecommendations(iaResponse.get("advice").asText());
 
         // D) Auto-guardar tarifa eléctrica extraída por Gemini
         JsonNode rateNode = iaResponse.get("electricityRate");
-        if (rateNode != null && !rateNode.isNull() && rateNode.asDouble() > 0) {
-            user.setElectricityRate(rateNode.asDouble());
+        if (rateNode != null && !rateNode.isNull()) {
+            user.setElectricityRate(new BigDecimal(rateNode.asText()));
             userRepository.save(user);
         }
 

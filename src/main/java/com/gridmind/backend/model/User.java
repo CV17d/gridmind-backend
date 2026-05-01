@@ -2,6 +2,7 @@ package com.gridmind.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
@@ -21,9 +22,9 @@ public class User {
     
     private String role = "USER"; // Default role
 
-    private Double electricityRate = 0.12; // Tarifa por kWh en dólares
+    private BigDecimal electricityRate = new BigDecimal("0.12"); // Tarifa por kWh en dólares
 
-    private Double alertThreshold = 50.0; // Límite de consumo en kWh para alerta
+    private BigDecimal alertThreshold = new BigDecimal("50.0"); // Límite de consumo en kWh para alerta
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -59,9 +60,9 @@ public class User {
     public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 
-    public Double getElectricityRate() { return electricityRate; }
-    public void setElectricityRate(Double electricityRate) { this.electricityRate = electricityRate; }
+    public BigDecimal getElectricityRate() { return electricityRate; }
+    public void setElectricityRate(BigDecimal electricityRate) { this.electricityRate = electricityRate; }
 
-    public Double getAlertThreshold() { return alertThreshold; }
-    public void setAlertThreshold(Double alertThreshold) { this.alertThreshold = alertThreshold; }
+    public BigDecimal getAlertThreshold() { return alertThreshold; }
+    public void setAlertThreshold(BigDecimal alertThreshold) { this.alertThreshold = alertThreshold; }
 }
