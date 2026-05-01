@@ -54,11 +54,17 @@ public class PredictiveService {
 
         try {
             System.out.println("🧠 IA: Solicitando predicción al microservicio de Python en: " + iaServiceUrl);
+            // Logueamos una muestra de los datos enviados para verificar precisión
+            if (!formattedHistory.isEmpty()) {
+                System.out.println("🧠 IA DATA SAMPLE: " + formattedHistory.get(formattedHistory.size()-1));
+            }
+            
             Map<String, Object> response = restTemplate.postForObject(iaServiceUrl, request, Map.class);
-            System.out.println("🧠 IA: Predicción recibida con éxito.");
+            System.out.println("🧠 IA RESPONSE: " + response);
+            
             return response;
         } catch (Exception e) {
-            System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + iaServiceUrl);
+            System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + iaServiceUrl + ". Error: " + e.getMessage());
             return Map.of("error", "El servicio de IA no responde.");
         }
     }
