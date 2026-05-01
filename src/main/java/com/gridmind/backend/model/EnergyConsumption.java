@@ -11,6 +11,7 @@ public class EnergyConsumption {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(precision = 15, scale = 10)
     private Double consumption; // kWh (Total acumulado o de la sesión)
     
     private Double voltage; // V
@@ -57,5 +58,7 @@ public class EnergyConsumption {
 
     public void setDevice(Device device) {
         this.device = device;
+        
+        System.out.println("📡 IOT DEBUG: Guardando consumo: " + this.getConsumption() + " kWh para el dispositivo " + (device != null ? device.getName() : "null"));
     }
 }
