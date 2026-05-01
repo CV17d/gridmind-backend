@@ -39,26 +39,27 @@ public class PredictiveService {
         
         System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
-        // 2. Formatear datos para la IA con AGREGACIÓN POR MINUTO, FILTRO y ESCALADO
-        // Agrupamos por minuto para que la IA vea puntos con más "cuerpo" y menos ruido
-        Map<String, java.math.BigDecimal> aggregated = new LinkedHashMap<>();
+        // 2. Formatear datos para la IA con AGREGACIÓN POR MINUTO (PROMEDIO), FILTRO y ESCALADO
+        // Usamos el promedio por minuto para mantener la escala original pero con menos ruido
+        Map<String, List<java.math.BigDecimal>> grouped = new LinkedHashMap<>();
         for (EnergyConsumption ec : history) {
             if (ec.getConsumption() == null || ec.getConsumption().compareTo(new java.math.BigDecimal("0.01")) >= 0) continue;
-            
-            // Truncar a minutos para agrupar
             String minuteKey = ec.getTimestamp().withSecond(0).withNano(0).toString();
-            aggregated.put(minuteKey, aggregated.getOrDefault(minuteKey, java.math.BigDecimal.ZERO).add(ec.getConsumption()));
+            grouped.computeIfAbsent(minuteKey, k -> new ArrayList<>()).add(ec.getConsumption());
         }
 
-        List<Map<String, Object>> formattedHistory = aggregated.entrySet().stream().map(entry -> {
+        List<Map<String, Object>> formattedHistory = grouped.entrySet().stream().map(entry -> {
+            java.math.BigDecimal avg = entry.getValue().stream()
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
+                .divide(new java.math.BigDecimal(entry.getValue().size()), java.math.MathContext.DECIMAL128);
+            
             Map<String, Object> map = new HashMap<>();
             map.put("timestamp", entry.getKey()); 
-            // Enviamos en Wh (x1000) para estabilidad
-            map.put("consumption", entry.getValue().multiply(new java.math.BigDecimal("1000")));
+            map.put("consumption", avg.multiply(new java.math.BigDecimal("1000")));
             return map;
         }).collect(Collectors.toList());
 
-        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos agregados (minutos) a la IA.");
+        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos promedio (minutos) a la IA.");
 
         // 3. Llamar al microservicio de Python
         Map<String, Object> request = new HashMap<>();
