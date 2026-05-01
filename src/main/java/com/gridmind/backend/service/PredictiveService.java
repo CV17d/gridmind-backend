@@ -39,14 +39,16 @@ public class PredictiveService {
         
         System.out.println("🧠 IA INFO: Enviando " + history.size() + " registros a la IA para " + email);
 
-        // 2. Formatear datos para la IA
-        List<Map<String, Object>> formattedHistory = history.stream().map(ec -> {
-            Map<String, Object> map = new HashMap<>();
-            // Formato ISO-8601 estándar para que Python lo entienda perfecto
-            map.put("timestamp", ec.getTimestamp().toString()); 
-            map.put("consumption", ec.getConsumption());
-            return map;
-        }).collect(Collectors.toList());
+        // 2. Formatear datos para la IA con FILTRO DE SANIDAD
+        // Filtramos valores absurdos (> 1.0 kWh en una sola lectura de segundos) que ensucian la predicción
+        List<Map<String, Object>> formattedHistory = history.stream()
+            .filter(ec -> ec.getConsumption() != null && ec.getConsumption().compareTo(new java.math.BigDecimal("1.0")) < 0)
+            .map(ec -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("timestamp", ec.getTimestamp().toString()); 
+                map.put("consumption", ec.getConsumption());
+                return map;
+            }).collect(Collectors.toList());
 
         // 3. Llamar al microservicio de Python
         Map<String, Object> request = new HashMap<>();
