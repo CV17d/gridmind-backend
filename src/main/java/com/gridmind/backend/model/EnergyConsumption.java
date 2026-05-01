@@ -51,6 +51,10 @@ public class EnergyConsumption {
         return timestamp;
     }
 
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public Device getDevice() {
         return device;
     }
