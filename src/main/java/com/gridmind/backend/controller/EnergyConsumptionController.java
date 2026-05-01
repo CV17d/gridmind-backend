@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import com.gridmind.backend.dto.EnergyConsumptionDTO;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/energy")
@@ -24,7 +25,7 @@ public class EnergyConsumptionController {
     @PostMapping("/{deviceId}")
     public EnergyConsumptionDTO create(
             @PathVariable("deviceId") Long deviceId,
-            @RequestParam("consumption") java.math.BigDecimal consumption,
+            @RequestParam("consumption") BigDecimal consumption,
             Authentication authentication) {
         String email = authentication.getName();
         EnergyConsumption savedEc = service.create(deviceId, consumption, email);
