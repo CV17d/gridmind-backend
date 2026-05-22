@@ -65,6 +65,9 @@ public class EmailService {
 
         try {
             restTemplate.postForEntity(RESEND_API_URL, request, Map.class);
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            System.err.println("Error HTTP de Resend: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error al enviar el correo electrónico vía API: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
             System.err.println("Error enviando email vía Resend: " + e.getMessage());
             throw new RuntimeException("Error al enviar el correo electrónico vía API.", e);
