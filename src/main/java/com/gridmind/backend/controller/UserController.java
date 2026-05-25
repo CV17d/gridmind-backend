@@ -11,6 +11,7 @@ import com.gridmind.backend.model.User;
 import com.gridmind.backend.service.UserService;
 import com.gridmind.backend.security.JwtService;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
@@ -30,12 +31,12 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody RegisterUserRequest request) {
+    public User register(@Valid @RequestBody RegisterUserRequest request) {
         return userService.registerUser(request);
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 
         User user = userService.findByEmail(request.getEmail());
 
@@ -57,7 +58,7 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public java.util.Map<String, String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+    public java.util.Map<String, String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         userService.processForgotPassword(request.getEmail());
         java.util.Map<String, String> response = new java.util.HashMap<>();
         response.put("message", "Si el correo está registrado, se enviarán las instrucciones para restablecer tu cuenta de GridMind.");
@@ -65,7 +66,7 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    public java.util.Map<String, String> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public java.util.Map<String, String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         userService.resetPassword(request.getToken(), request.getNewPassword());
         java.util.Map<String, String> response = new java.util.HashMap<>();
         response.put("message", "Password successfully reset.");
@@ -74,7 +75,7 @@ public class UserController {
 
     @PutMapping("/settings")
     public java.util.Map<String, String> updateSettings(
-            @RequestBody UpdateSettingsRequest request,
+            @Valid @RequestBody UpdateSettingsRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email);
@@ -95,7 +96,7 @@ public class UserController {
 
     @PutMapping("/change-password")
     public java.util.Map<String, String> changePassword(
-            @RequestBody ChangePasswordRequest request,
+            @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email);
