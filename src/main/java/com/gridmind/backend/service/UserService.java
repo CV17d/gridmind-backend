@@ -40,7 +40,10 @@ public class UserService {
             return null; // Graceful exist to prevent user enumeration without throwing 500
         }
 
-        String token = java.util.UUID.randomUUID().toString();
+        java.security.SecureRandom secureRandom = new java.security.SecureRandom();
+        byte[] tokenBytes = new byte[128]; // 1024 bits de entropía
+        secureRandom.nextBytes(tokenBytes);
+        String token = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
         user.setResetToken(token);
         user.setResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
