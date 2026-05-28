@@ -4,6 +4,8 @@ import com.gridmind.backend.model.EnergyConsumption;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.*;
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class PredictiveService {
+
+    private static final Logger log = LoggerFactory.getLogger(PredictiveService.class);
 
     private final EnergyConsumptionRepository energyRepository;
     private final UserRepository userRepository;
@@ -33,17 +37,17 @@ public class PredictiveService {
         List<EnergyConsumption> history = new ArrayList<>(energyRepository.findHistoryForPrediction(user.getId()));
 
         if (history.isEmpty()) {
-            System.out.println("🧠 IA INFO: El historial para " + email + " está vacío.");
+            log.info("El historial para {} está vacío.", email);
             return Map.of("error", "No hay suficiente historial para predecir");
         }
         
-        System.out.println("🧠 IA INFO: Historial real de " + history.size() + " registros para " + email);
+        log.info("Historial real de {} registros para {}", history.size(), email);
 
         // --- LÓGICA DE SIMULACIÓN (Cebado de IA) ---
         // Si el historial es muy corto (< 200 puntos), simulamos datos basados en el promedio actual
         // para que la IA tenga contexto suficiente para predecir de inmediato.
         if (history.size() > 0 && history.size() < 200) {
-            System.out.println("🧪 IA SIM: Cebando IA con datos sintéticos basados en el promedio actual...");
+            log.info("Cebando IA con datos sintéticos basados en el promedio actual...");
             java.math.BigDecimal avgConsumption = history.stream()
                 .map(EnergyConsumption::getConsumption)
                 .filter(Objects::nonNull)
@@ -58,7 +62,7 @@ public class PredictiveService {
                 synthetic.setTimestamp(earliest.minusSeconds(i * 3));
                 history.add(0, synthetic); // Insertar al inicio para mantener orden ASC
             }
-            System.out.println("🧪 IA SIM: Historial cebado a " + history.size() + " puntos.");
+            log.info("Historial cebado a {} puntos.", history.size());
         }
 
         // 2. Formatear datos para la IA con AGREGACIÓN POR 5 MINUTOS (PROMEDIO), FILTRO y ESCALADO
@@ -86,17 +90,17 @@ public class PredictiveService {
             return map;
         }).collect(Collectors.toList());
 
-        System.out.println("🧠 IA INFO: Enviando " + formattedHistory.size() + " puntos promedio (5 min) a la IA.");
+        log.info("Enviando {} puntos promedio (5 min) a la IA.", formattedHistory.size());
 
         // 3. Llamar al microservicio de Python
         Map<String, Object> request = new HashMap<>();
         request.put("history", formattedHistory);
 
         try {
-            System.out.println("🧠 IA: Solicitando predicción con agregación por minuto...");
+            log.info("Solicitando predicción con agregación por minuto...");
             
             Map<String, Object> response = restTemplate.postForObject(iaServiceUrl, request, Map.class);
-            System.out.println("🧠 IA RAW RESPONSE: " + response);
+            log.debug("IA RAW RESPONSE: {}", response);
             
             // NORMALIZACIÓN
             Map<String, Object> normalizedResponse = new HashMap<>(response);
@@ -116,7 +120,7 @@ public class PredictiveService {
             
             return normalizedResponse;
         } catch (Exception e) {
-            System.err.println("❌ IA ERROR: No se pudo conectar con el microservicio en " + iaServiceUrl + ". Error: " + e.getMessage());
+            log.error("No se pudo conectar con el microservicio en {}. Error: {}", iaServiceUrl, e.getMessage());
             return Map.of("error", "El servicio de IA no responde.");
         }
     }
