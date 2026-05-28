@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -62,6 +64,28 @@ public class GlobalExceptionHandler {
         error.put("path", request.getRequestURI());
 
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    // ── 400 Bad Request: Peticiones malformadas o argumentos inválidos ────────
+    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<?> handleBadRequest(Exception ex, HttpServletRequest request) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", 400);
+        error.put("message", "La petición es inválida o el formato JSON es incorrecto.");
+        error.put("timestamp", System.currentTimeMillis());
+        error.put("path", request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 409 Conflict: Violación de reglas de DB (ej. email duplicado) ─────────
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", 409);
+        error.put("message", "Conflicto de datos: El registro ya existe o no cumple con las reglas de la base de datos.");
+        error.put("timestamp", System.currentTimeMillis());
+        error.put("path", request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
     // ── 500 Internal Server Error (fallback) ──────────────────────────────────

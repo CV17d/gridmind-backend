@@ -2,7 +2,6 @@ package com.gridmind.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment; // Importación necesaria
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,25 +15,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
-import java.util.Arrays; // Importación necesaria
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final RateLimitFilter rateLimitFilter;
-    private final Environment environment; // Inyectar Environment
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter, Environment environment) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.rateLimitFilter = rateLimitFilter;
-        this.environment = environment;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        boolean isProdProfile = Arrays.asList(environment.getActiveProfiles()).contains("prod");
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -42,25 +36,18 @@ public class SecurityConfig {
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/users/login", "/api/v1/users/register",
                                 "/api/v1/users/forgot-password", "/api/v1/users/reset-password")
                         .permitAll()
-                        .requestMatchers("/api/v1/iot/**").permitAll() // Considerar asegurar estos en producción
-                        .requestMatchers("/api/v1/ws/**").permitAll() // Considerar asegurar estos en producción
-                        .requestMatchers("/error").permitAll();
-
-                    if (!isProdProfile) { // Permitir Swagger solo si NO es perfil de producción
-                        auth.requestMatchers("/v3/api-docs/**").permitAll()
-                            .requestMatchers("/swagger-ui/**").permitAll()
-                            .requestMatchers("/swagger-ui.html").permitAll();
-                    }
-                    // En perfil de producción, los endpoints de Swagger requerirán autenticación
-                    // o se puede añadir .denyAll() si se quiere deshabilitar completamente.
-
-                    auth.anyRequest().authenticated();
-                })
+                        .requestMatchers("/api/v1/iot/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/v1/ws/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated())
 
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
