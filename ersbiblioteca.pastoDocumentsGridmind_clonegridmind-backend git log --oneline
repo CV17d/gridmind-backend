@@ -1,0 +1,99 @@
+[33mbdf7567[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Implementaciones de seguridad
+[33m61aee34[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m test(auth): agregar pruebas unitarias para el servicio de autenticación JWT
+[33m2f83515[m security: add rate limiting filter and bean validation on all DTOs
+[33ma6b6a36[m chore: Update frontend submodule for optimized input limits
+[33m877120a[m security: Upgrade password reset token to 1024-bit entropy and JWT secret size
+[33m6ca40b0[m chore: Update frontend submodule for input size limits
+[33me0a5c27[m chore: Update frontend submodule to restore internal history stack
+[33m33a6d3e[m chore: Update frontend submodule to use replace in ProtectedRoute
+[33m55c4325[m chore: Update frontend submodule to remove back button trap and allow native block
+[33mb7966eb[m chore: Update frontend submodule for robust back button trap
+[33mdf9e26c[m chore: Update frontend submodule for back button trap
+[33m22de6c5[m chore: Update frontend submodule with password visibility toggle features
+[33mf06753d[m chore: Update frontend submodule with password encryption fix
+[33m97428b2[m Mejorar el logging de errores de Resend API
+[33m71b1377[m fix: overwritten predicted_next_30_days key to match normalized kWh value
+[33m04409e9[m fix: added missing setTimestamp method to EnergyConsumption model
+[33md96d001[m feat: implemented synthetic data priming for IA when history is short
+[33m510de81[m feat: expanded history to 10k records and used 5-min aggregation for IA
+[33m7097d11[m fix: used average for minute aggregation to prevent over-prediction
+[33mc62fa47[m fix: implemented 1-minute aggregation for IA history to provide more robust data points
+[33mbb369de[m fix: scaled IA input by 1000 to improve numerical stability and prevent zero predictions
+[33m2a0a9a8[m fix: normalized IA response to prediction key and converted Wh to kWh
+[33mfd7aa84[m fix: tightened IA filter to 0.01 to remove all legacy noise
+[33ma726594[m fix: added sanity filter to IA history to ignore legacy noise
+[33mef7123a[m debug: add logs to verify IA data and response
+[33mef0be22[m fix: integrated user alert threshold into AlertService with BigDecimal precision
+[33m9313ceb[m fix: updated settings DTO to use BigDecimal
+[33m3c554c2[m fix: full migration of User and EnergyBillService to BigDecimal
+[33m715148d[m fix: corrected IA data ordering and migrated all energy fields to BigDecimal
+[33m611ce91[m fix: migrated IotController energy endpoint to BigDecimal to resolve compilation errors
+[33mfe0c6ac[m fix: standardized BigDecimal imports and signatures in Service
+[33m30de8ae[m fix: explicit BigDecimal imports across DTO and Controller to force recompile
+[33mabc750d[m fix: updated Controller, Service and DTO to BigDecimal to resolve compilation errors
+[33m295682d[m fix: migrated energy consumption to BigDecimal for maximum precision and resolved deployment crash
+[33mbd66861[m fix: forced high precision for energy consumption and added iot debug logs
+[33m9fa749e[m debug: added logs to track IA history size
+[33m885b1e2[m feat: expanded IA context to 500 readings and enabled autonomous outlier filtering
+[33m4946172[m fix: narrowed IA data window to 5 minutes for instant calibration
+[33m1a5c879[m fix: filtered out old data from IA forecast to fix skewed results
+[33mbcce6c9[m fix: fine-tuned energy scale and timestamp format for IA precision
+[33mf1dcc93[m fix: updated IA query to use recent data and improved prediction engine accuracy
+[33m1f87110[m feat: added JSON telemetry support for ESP32 and fixed API Key validation
+[33m213300a[m fix: increased multipart file upload limit to 15MB for mobile support
+[33m3e4f7df[m fix: corrected duplicate yaml key in application-prod.yaml
+[33m6284414[m fix: updated password reset link to new production domain
+[33m0cc4db4[m cleanup: project-wide advisor removal
+[33m5469ef2[m revert: remove Grok integration completely
+[33m5b43230[m feat: integrated AI provider selection (Gemini/Grok) into bill upload
+[33m9a099b7[m revert: return to default Railway and Vercel domains for stability
+[33md89ec60[m chore: add default IA service URL for production
+[33m9659c0d[m chore: align prod datasource variables
+[33mcd468e1[m fix: explicit CORS for app.gridmind.lat
+[33mee97947[m fix: update CORS to allow app.gridmind.lat subdomain
+[33m42edc4e[m Deployment: IA URL is now configurable via environment variables
+[33m2ac7f38[m Cleanup: Moved ia-service to its own repository
+[33m2394982[m Fase 3 Finalizada: Integración de ia-service y mejoras de localización/ajustes
+[33m62291fe[m feat: implementar campos de voltaje, corriente y potencia en base de datos y websockets
+[33mf3f9bd1[m Phase 2 Final: Unified Repository and AI Services
+[33m5b982e8[m Merge branch 'main' of https://github.com/CV17d/gridmind-backend
+[33m218a9b6[m Phase 2 complete: Real-time Anomaly Detection, AI Forecasting service, and Live WebSocket updates
+[33m89c86e3[m fix: permitir Vercel en CORS
+[33mf8c9297[m fix: permitir Vercel en CORS y actualizar variables para Railway
+[33m5f88077[m fix: permitir puertos 5174 y 5175 en CORS para desarrollo local
+[33m75b8cad[m feat: agregar dominio gridmind.lat a CORS permitidos
+[33m8a6e017[m fix: corregir estructura YAML prod - mover resend a seccion app con dominio gridmind.lat
+[33m40f53f0[m fix: capturar ExpiredJwtException en JwtAuthFilter para no bloquear rutas publicas
+[33md3180e0[m fix: hacer RESEND_API_KEY opcional hasta configurar dominio en Render
+[33mefa762d[m Restaurar obligatoriedad de Resend API Key en producción
+[33m879fffc[m simulacion esp32
+[33m368fd2e[m init: proyecto backend como raíz
+[33m6a65a59[m feat: Migracion completa de SMTP a Resend API
+[33me50dbd9[m fix: Agregados timeouts de 5s para prevenir bloqueos en el envio de correo
+[33mdd69c5b[m fix: Parche de redirección en auth y confianza SSL para correos
+[33mf897505[m feat: Integracion de Correos SMTP, UI Cinetica, y Refactor de Autenticacion Completo
+[33mcaf43de[m Arreglo del bug de imagenes viejas
+[33m66b47c4[m Update/energybill view
+[33mc5b1432[m fix(security): cambiar status code de peticiones no autorizadas de 403 a 401
+[33mc9bb17f[m feat: migración total a rutas api v1 y global excention handler
+[33mffbeccc[m fix: usar allowedOriginPatterns para mejor soporte de wildcards en CORS
+[33ma320827[m chore: remover frontend del repo backend (movido a repo propio)
+[33m4f1586b[m feat: crear frontend completo React+TypeScript con dashboard, dispositivos, facturas IA y alertas
+[33md42bead[m deploy: agregar Dockerfile y perfil de producción para Render
+[33mbfa0d5b[m feat: implementar WebSockets STOMP para transmisión de datos en tiempo real
+[33m669f781[m feat: implementar sistema de alertas inteligentes con detección automática de consumo excesivo
+[33m72b1296[m security: remover API key de google de código fuente y migrar a variables de entorno
+[33m427462b[m docs: integrar swagger openapi 3 para documentacion de la API
+[33m7c53724[m feat: crear motor analítico y proyecciones SQL para gráficas del Dashboard
+[33mec58e50[m chore: limpieza de carpeta de pruebas uploads de git
+[33md72005b[m feat: implementar AI Energy Bill Advisor con Gemini Vision 2.5 y DTO security
+[33m420ca11[m[33m ([m[1;31morigin/feature/iot-security[m[33m)[m Feat: implementar la seguridad M2M via Key y crear IOTcontroller
+[33m295d223[m[33m ([m[1;31morigin/feature/energy-consumption[m[33m)[m Modulo energy consumption, paginacion y DTOs implementado
+[33m47db2ab[m[33m ([m[1;31morigin/feature/devices[m[33m)[m Devices funcionando al 100%
+[33mcdabc8c[m Devices module completed with security
+[33mf0e46f2[m[33m ([m[1;31morigin/feature/global-exception-handler[m[33m)[m Project ownership security implemented (430/404 handling+access validation)
+[33m20010b3[m Add global exception handler
+[33m4677b49[m[33m ([m[1;31morigin/feature/project-ownership-security[m[33m)[m Finalize project ownership security
+[33mc45331f[m Add project ownership validation
+[33m27ba506[m[33m ([m[1;31morigin/feature/jwt-security[m[33m)[m Project CRUD endpoints added
+[33m368ea25[m Initial backend with JWT authentication
