@@ -73,10 +73,8 @@ public class SecurityConfig {
                 "http://localhost:5174",
                 "http://localhost:5175",
                 "http://localhost:3000",
-                "https://*.onrender.com",
-                "https://*.vercel.app",
+                "https://gridmind-on.vercel.app",
                 "https://gridmind.lat",
-                "https://*.gridmind.lat",
                 "https://app.gridmind.lat",
                 "https://www.gridmind.lat"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
