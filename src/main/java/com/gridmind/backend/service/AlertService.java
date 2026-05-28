@@ -3,10 +3,16 @@ import com.gridmind.backend.model.Alert;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.AlertRepository;
 import com.gridmind.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.List;
+
 @Service
 public class AlertService {
+
+    private static final Logger log = LoggerFactory.getLogger(AlertService.class);
+
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
     private final WebSocketService webSocketService;
@@ -41,7 +47,7 @@ public class AlertService {
     }
 
     private void createAlert(User user, String type, String message) {
-        System.out.println("🔔 DISPARANDO ALERTA: " + type + " -> " + message);
+        log.info("DISPARANDO ALERTA: {} -> {}", type, message);
         Alert alert = new Alert();
         alert.setUser(user);
         alert.setType(type);
@@ -49,7 +55,7 @@ public class AlertService {
         alertRepository.save(alert);
         
         // Notificar en tiempo real por WebSocket
-        System.out.println("📡 Enviando alerta por WebSocket a /topic/alerts...");
+        log.debug("Enviando alerta por WebSocket a /topic/alerts...");
         webSocketService.broadcastAlert(message);
     }
     // 📋 Listar todas las alertas del usuario

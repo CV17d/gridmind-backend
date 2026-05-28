@@ -2,6 +2,8 @@ package com.gridmind.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,6 +16,8 @@ import java.util.Map;
 
 @Service
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
     private RestTemplate restTemplate;
@@ -31,7 +35,7 @@ public class EmailService {
 
     public void sendPasswordResetEmail(String toEmail, String token) {
         if (resendApiKey == null || resendApiKey.trim().isEmpty()) {
-            System.err.println("SKIPPING EMAIL: Resend API Key no configurada. Token para " + toEmail + ": " + token);
+            log.warn("SKIPPING EMAIL: Resend API Key no configurada. Token para {}: {}", toEmail, token);
             return;
         }
 
@@ -66,10 +70,10 @@ public class EmailService {
         try {
             restTemplate.postForEntity(RESEND_API_URL, request, Map.class);
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            System.err.println("Error HTTP de Resend: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            log.error("Error HTTP de Resend: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new RuntimeException("Error al enviar el correo electrónico vía API: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            System.err.println("Error enviando email vía Resend: " + e.getMessage());
+            log.error("Error enviando email vía Resend: {}", e.getMessage());
             throw new RuntimeException("Error al enviar el correo electrónico vía API.", e);
         }
     }
