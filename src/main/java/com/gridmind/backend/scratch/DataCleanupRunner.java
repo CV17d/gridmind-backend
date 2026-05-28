@@ -1,5 +1,7 @@
 package com.gridmind.backend.scratch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
@@ -9,6 +11,8 @@ import java.math.BigDecimal;
 
 @Component
 public class DataCleanupRunner implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataCleanupRunner.class);
 
     private final EnergyConsumptionRepository consumptionRepository;
     private final UserRepository userRepository;
@@ -22,12 +26,12 @@ public class DataCleanupRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         String targetEmail = "velascoburbanocristian@gmail.com";
         userRepository.findByEmail(targetEmail).ifPresent(user -> {
-            System.out.println("🧹 Limpiando historial antiguo para: " + targetEmail);
+            log.info("Limpiando historial antiguo para: {}", targetEmail);
             // Solo borramos si el usuario existe para no romper nada
             // Opcional: Podríamos borrar solo los registros > 1.0 si sabemos que son basura
             // Pero lo mejor es empezar de cero para que la IA calibre bien
             // consumptionRepository.deleteByUserId(user.getId()); 
-            System.out.println("✅ Historial listo para reinicio.");
+            log.info("Historial listo para reinicio.");
         });
     }
 }
