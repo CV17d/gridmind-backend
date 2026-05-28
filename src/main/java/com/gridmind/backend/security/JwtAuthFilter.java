@@ -8,14 +8,23 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority; // Importación necesaria
+import org.springframework.security.core.authority.SimpleGrantedAuthority; // Importación necesaria
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List; // Importación necesaria
+import java.util.stream.Collectors; // Importación necesaria
+
+import org.slf4j.Logger; // Importación necesaria
+import org.slf4j.LoggerFactory; // Importación necesaria
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class); // Logger
 
     private final JwtService jwtService;
 
@@ -46,12 +55,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 if (jwtService.validateToken(token)) {
+                    // Extraer roles del token
+                    List<String> roles = jwtService.extractRoles(token);
+                    List<GrantedAuthority> authorities = roles.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
 
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     email,
                                     null,
-                                    Collections.emptyList()
+                                    authorities // Pasar las autoridades extraídas
                             );
 
                     authToken.setDetails(
@@ -62,7 +76,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Token inválido o expirado: ignorar y continuar sin autenticar.
+            // Registrar la excepción para auditoría y depuración
+            logger.warn("Token JWT inválido o expirado: {}", e.getMessage());
             // Spring Security se encargará de verificar si la ruta es pública o no.
         }
 
