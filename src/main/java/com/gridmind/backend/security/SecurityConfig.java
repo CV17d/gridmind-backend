@@ -21,10 +21,12 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final IotApiKeyFilter iotApiKeyFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter, IotApiKeyFilter iotApiKeyFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.iotApiKeyFilter = iotApiKeyFilter;
     }
 
     @Bean
@@ -41,7 +43,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/users/login", "/api/v1/users/register",
                                 "/api/v1/users/forgot-password", "/api/v1/users/reset-password")
                         .permitAll()
-                        .requestMatchers("/api/v1/iot/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
@@ -50,6 +51,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
 
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(iotApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .httpBasic(basic -> basic.disable())
