@@ -5,25 +5,45 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority; // Importación necesaria
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Collection; // Importación necesaria
 import java.util.Date;
+import java.util.HashMap; // Importación necesaria
+import java.util.List;
+import java.util.Map; // Importación necesaria
 import java.util.function.Function;
+import java.util.stream.Collectors; // Importación necesaria
 
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY =
-            "gridmind-super-secure-production-secret-key-that-is-extremely-long-and-cryptographically-safe-for-jwt-signing-2026-gridmind-super-secure-production-secret-key-that-is-extremely-long-and-cryptographically-safe-for-jwt-signing-2026";
+    @Value("${jwt.secret-key}")
+    private String secretKey;
 
     private Key getSignInKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
+    // Método original para generar token sin roles (podría ser útil para ciertos casos)
     public String generateToken(String email) {
+        return generateToken(email, new HashMap<>());
+    }
+
+    // Nuevo método para generar token con roles
+    public String generateToken(String email, Collection<? extends GrantedAuthority> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+        if (authorities != null && !authorities.isEmpty()) {
+            claims.put("roles", authorities.stream()
+                                            .map(GrantedAuthority::getAuthority)
+                                            .collect(Collectors.toList()));
+        }
 
         return Jwts.builder()
+                .setClaims(claims) // Añade los claims, incluyendo los roles
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
@@ -33,6 +53,12 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    // Nuevo método para extraer roles
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        return (List<String>) claims.get("roles");
     }
 
     public boolean validateToken(String token) {
@@ -53,7 +79,6 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
