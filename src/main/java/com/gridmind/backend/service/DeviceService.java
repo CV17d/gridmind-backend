@@ -5,6 +5,8 @@ import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.DeviceRepository;
 import com.gridmind.backend.exception.AccessDeniedException;
 import com.gridmind.backend.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import java.util.UUID;
 
 @Service
 public class DeviceService {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceService.class);
 
     private final DeviceRepository deviceRepository;
     private final UserService userService;
@@ -25,6 +29,7 @@ public class DeviceService {
     // ✅ Crear device
     public Device createDevice(Device device, String email) {
 
+        log.info("Registrando nuevo dispositivo '{}' para el usuario: {}", device.getName(), email);
         User user = userService.findByEmail(email);
 
         device.setUser(user);
@@ -45,12 +50,13 @@ public class DeviceService {
 
     // 🔐 Obtener por ID con seguridad
     public Device getDeviceById(Long id, String email) {
-
+        log.debug("Consultando dispositivo {} para el usuario: {}", id, email);
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found"));
 
         if (!device.getUser().getEmail().equalsIgnoreCase(email)) {
-            throw new AccessDeniedException("Access denied");
+            log.warn("ACCESO DENEGADO: El usuario {} intentó acceder al dispositivo {} que no le pertenece.", email, id);
+            throw new AccessDeniedException("No tienes permiso para ver este dispositivo");
         }
 
         return device;
@@ -63,9 +69,11 @@ public class DeviceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found"));
 
         if (!device.getUser().getEmail().equalsIgnoreCase(email)) {
-            throw new AccessDeniedException("Access denied");
+            log.warn("ELIMINACIÓN DENEGADA: El usuario {} intentó borrar el dispositivo {} sin autorización.", email, id);
+            throw new AccessDeniedException("No tienes permiso para eliminar este dispositivo");
         }
 
+        log.info("Eliminando dispositivo {} ('{}') por solicitud de {}", id, device.getName(), email);
         deviceRepository.delete(device);
     }
 }
