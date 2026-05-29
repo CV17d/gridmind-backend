@@ -15,6 +15,9 @@ public class Project {
 
     private String ownerEmail;
 
+    @Version
+    private Long version;
+
     public Project() {}
 
     public Project(String name, String description, String ownerEmail) {
@@ -49,5 +52,9 @@ public class Project {
 
     public void setOwnerEmail(String ownerEmail) {
         this.ownerEmail = ownerEmail;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

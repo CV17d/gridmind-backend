@@ -32,6 +32,9 @@ public class User {
 
     private LocalDateTime resetTokenExpiry;
 
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Device> devices;
 
@@ -65,4 +68,6 @@ public class User {
 
     public BigDecimal getAlertThreshold() { return alertThreshold; }
     public void setAlertThreshold(BigDecimal alertThreshold) { this.alertThreshold = alertThreshold; }
+
+    public Long getVersion() { return version; }
 }

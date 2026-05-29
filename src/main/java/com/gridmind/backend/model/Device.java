@@ -25,6 +25,9 @@ public class Device {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Version
+    private Long version;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -87,5 +90,9 @@ public class Device {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

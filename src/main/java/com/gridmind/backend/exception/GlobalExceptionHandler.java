@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Error de validación: " + ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Object> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex, WebRequest request) {
+        logger.warn("Colisión de concurrencia (Optimistic Locking) prevenida: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.CONFLICT, "Conflicto de concurrencia: El registro que intentas modificar acaba de ser actualizado por otro proceso. Por favor, recarga los datos y vuelve a intentarlo.", request);
     }
 
     @ExceptionHandler(Exception.class)
