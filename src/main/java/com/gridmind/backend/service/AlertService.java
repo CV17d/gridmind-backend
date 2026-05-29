@@ -3,6 +3,7 @@ import com.gridmind.backend.model.Alert;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.AlertRepository;
 import com.gridmind.backend.repository.UserRepository;
+import com.gridmind.backend.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -61,19 +62,19 @@ public class AlertService {
     // 📋 Listar todas las alertas del usuario
     public List<Alert> getMyAlerts(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         return alertRepository.findByUserOrderByCreatedAtDesc(user);
     }
     // 🔴 Contar alertas no leídas (para el badge)
     public Long countUnread(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         return alertRepository.countByUserAndReadFalse(user);
     }
     // ✅ Marcar una alerta como leída
     public void markAsRead(Long alertId) {
         Alert alert = alertRepository.findById(alertId)
-            .orElseThrow(() -> new RuntimeException("Alerta no encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Alerta no encontrada"));
         alert.setRead(true);
         alertRepository.save(alert);
     }
