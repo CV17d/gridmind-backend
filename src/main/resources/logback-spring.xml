@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Incluir los defaults de Spring Boot -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- Configuración para enmascarar tokens JWT y contraseñas -->
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %replace(%m){'(Bearer\\s+[A-Za-z0-9\\-\\._~+\\/]+=*|\\\"password\\\"\\s*:\\s*\\\"[^\\\"]+\\\"|password=[^,\\s]+)', '***MASKED_SENSITIVE_DATA***'}%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Perfil para Producción -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <!-- Evitar que Hibernate u otras librerías impriman SQL o datos internos -->
+        <logger name="org.hibernate.SQL" level="ERROR"/>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="ERROR"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.springframework.security" level="WARN"/>
+    </springProfile>
+
+    <!-- Perfil por Defecto (Desarrollo) -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+    </springProfile>
+
+</configuration>

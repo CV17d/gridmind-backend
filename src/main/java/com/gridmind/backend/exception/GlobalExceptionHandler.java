@@ -11,9 +11,13 @@ import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
@@ -40,7 +44,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(Exception ex, WebRequest request) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor", request);
+        // El Stack Trace se registra internamente para debug, pero NUNCA se expone en la respuesta HTTP
+        logger.error("Excepción no manejada atrapada en el controlador global: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor. Por favor contacte soporte.", request);
     }
 
     /**
