@@ -47,7 +47,9 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/ws/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/actuator/**").authenticated() // Protección estricta para endpoints sensibles
                         .anyRequest().authenticated())
 
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

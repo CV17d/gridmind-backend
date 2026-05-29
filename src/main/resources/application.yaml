@@ -33,3 +33,12 @@ app:
   resend:
     api-key: ${RESEND_API_KEY:}
     from-email: "GridMind <onboarding@resend.dev>"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,env,metrics"
+  endpoint:
+    health:
+      show-details: always
