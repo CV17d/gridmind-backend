@@ -3,6 +3,10 @@ import com.gridmind.backend.model.EnergyBill;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.EnergyBillRepository;
 import com.gridmind.backend.repository.UserRepository;
+import com.gridmind.backend.exception.ResourceNotFoundException;
+import com.gridmind.backend.exception.AccessDeniedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,10 +20,15 @@ import java.util.*;
 
 @Service
 public class EnergyBillService {
+
+    private static final Logger log = LoggerFactory.getLogger(EnergyBillService.class);
+
     private final EnergyBillRepository billRepository;
     private final UserRepository userRepository;
     
-    private final String UPLOAD_DIR = "uploads/bills/";
+    @Value("${app.upload.dir:uploads/bills/}")
+    private String uploadDir;
+
     // Spring inyecta la llave secreta que escribiste en tu application.yaml
     @Value("${gemini.api.key}")
     private String geminiApiKey;
@@ -31,15 +40,18 @@ public class EnergyBillService {
     // 📥 1. Método Principal que atrapa la Foto
     public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail) throws Exception {
         User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        log.info("Iniciando análisis de factura para el usuario: {}", userEmail);
+
         // A) Guardar foto físicamente
-        Path uploadPath = Paths.get(UPLOAD_DIR);
+        Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) { Files.createDirectories(uploadPath); }
         String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(uniqueFileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // B) Hablar con la Inteligencia Artificial REAL
+        log.info("Archivo guardado en: {}. Solicitando análisis a Gemini...", filePath);
         JsonNode iaResponse = callGeminiVisionAPI(filePath);
 
         // C) Guardar Factura Final
@@ -57,6 +69,7 @@ public class EnergyBillService {
             userRepository.save(user);
         }
 
+        log.info("Factura analizada y guardada exitosamente para {}", userEmail);
         return billRepository.save(bill);
     }
 
@@ -82,25 +95,25 @@ public class EnergyBillService {
     // 📋 3. Obtener el historial
     public List<EnergyBill> getUserBills(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         return billRepository.findByUserOrderByUploadedAtDesc(user);
     }
 
     // 🖼️ 4. Obtener la imagen fotográfica de la factura
     public byte[] getBillImageAsBytes(Long billId, String userEmail) throws Exception {
         User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
             
         EnergyBill bill = billRepository.findById(billId)
-            .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Factura no encontrada"));
             
         if (!bill.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Acceso denegado: No tienes permiso para ver la foto de esta factura");
+            throw new AccessDeniedException("No tienes permiso para ver la foto de esta factura");
         }
         
         Path imagePath = Paths.get(bill.getFileUrl());
         if (!Files.exists(imagePath)) {
-            throw new RuntimeException("El archivo físico de la foto ya no existe en el servidor");
+            throw new ResourceNotFoundException("El archivo físico de la foto ya no existe en el servidor");
         }
         
         return Files.readAllBytes(imagePath);
