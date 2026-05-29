@@ -32,7 +32,17 @@ public class SecurityConfig {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers(
+                                "/api/v1/iot/**",
+                                "/api/v1/users/login",
+                                "/api/v1/users/register",
+                                "/api/v1/users/forgot-password",
+                                "/api/v1/users/reset-password",
+                                "/api/v1/users/refresh-token"
+                        )
+                )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
