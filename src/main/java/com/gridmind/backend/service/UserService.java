@@ -3,6 +3,8 @@ package com.gridmind.backend.service;
 import com.gridmind.backend.dto.RegisterUserRequest;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.UserRepository;
+import com.gridmind.backend.exception.ResourceNotFoundException;
+import com.gridmind.backend.exception.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -57,10 +59,10 @@ public class UserService {
 
     public void resetPassword(String token, String newPassword) {
         User user = userRepository.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Token inválido o expirado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Token inválido o expirado."));
 
         if (user.getResetTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
-            throw new RuntimeException("El token ha expirado.");
+            throw new AccessDeniedException("El token ha expirado.");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
