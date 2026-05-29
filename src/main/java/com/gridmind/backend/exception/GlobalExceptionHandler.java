@@ -2,102 +2,43 @@ package com.gridmind.backend.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── 400 Bad Request: Bean Validation fallida ─────────────────────────────
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationErrors(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
-
-        // Recopilar todos los mensajes de error de cada campo
-        List<String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
-                .collect(Collectors.toList());
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", 400);
-        body.put("error", "Validation Failed");
-        body.put("messages", errors);
-        body.put("timestamp", System.currentTimeMillis());
-        body.put("path", request.getRequestURI());
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
-
-    // ── 404 Not Found ─────────────────────────────────────────────────────────
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<?> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", 404);
-        error.put("message", ex.getMessage());
-        error.put("timestamp", System.currentTimeMillis());
-        error.put("path", request.getRequestURI());
-
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    // ── 403 Forbidden ─────────────────────────────────────────────────────────
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
-
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", 403);
-        error.put("message", ex.getMessage());
-        error.put("timestamp", System.currentTimeMillis());
-        error.put("path", request.getRequestURI());
-
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "Acceso denegado: " + ex.getMessage(), request);
     }
 
-    // ── 400 Bad Request: Peticiones malformadas o argumentos inválidos ────────
-    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
-    public ResponseEntity<?> handleBadRequest(Exception ex, HttpServletRequest request) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", 400);
-        error.put("message", "La petición es inválida o el formato JSON es incorrecto.");
-        error.put("timestamp", System.currentTimeMillis());
-        error.put("path", request.getRequestURI());
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
-
-    // ── 409 Conflict: Violación de reglas de DB (ej. email duplicado) ─────────
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", 409);
-        error.put("message", "Conflicto de datos: El registro ya existe o no cumple con las reglas de la base de datos.");
-        error.put("timestamp", System.currentTimeMillis());
-        error.put("path", request.getRequestURI());
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-    }
-
-    // ── 500 Internal Server Error (fallback) ──────────────────────────────────
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneral(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<Object> handleGlobalException(Exception ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor", request);
+    }
 
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", 500);
-        error.put("message", "Internal server error");
-        error.put("timestamp", System.currentTimeMillis());
-        error.put("path", request.getRequestURI());
-
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    /**
+     * Método utilitario para construir una respuesta de error estandarizada.
+     */
+    private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message, WebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
+        body.put("message", message);
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, status);
     }
 }
