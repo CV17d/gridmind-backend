@@ -6,12 +6,17 @@ import com.gridmind.backend.model.EnergyBill;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.repository.UserRepository;
 import com.gridmind.backend.repository.EnergyBillRepository;
+import com.gridmind.backend.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.*;
 
 @Service
 public class AnalyticsService {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
     
     private final EnergyConsumptionRepository consumptionRepository;
     private final UserRepository userRepository;
@@ -27,8 +32,10 @@ public class AnalyticsService {
 
     public Map<String, Object> getBillComparison(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
             
+        log.info("Calculando comparativa de facturas y consumo real para: {}", email);
+
         List<EnergyBill> bills = billRepository.findByUserOrderByUploadedAtDesc(user);
         
         Map<String, Object> result = new HashMap<>();
@@ -51,7 +58,7 @@ public class AnalyticsService {
 
     public List<DailyConsumptionDTO> getMyDailyChartData(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
             
         return consumptionRepository.findDailyConsumptionByUserId(user.getId());
     }
