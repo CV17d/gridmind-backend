@@ -6,6 +6,7 @@ import com.gridmind.backend.repository.UserRepository;
 import com.gridmind.backend.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -18,10 +19,14 @@ public class AlertService {
     private final UserRepository userRepository;
     private final WebSocketService webSocketService;
 
-    // Umbrales de seguridad
-    private static final double DAILY_KWH_THRESHOLD = 10.0;
-    private static final double VOLTAGE_MIN = 100.0;
-    private static final double VOLTAGE_MAX = 135.0;
+    @Value("${app.alerts.voltage.min:100.0}")
+    private double voltageMin;
+
+    @Value("${app.alerts.voltage.max:135.0}")
+    private double voltageMax;
+
+    @Value("${app.alerts.power.threshold:2000.0}")
+    private double powerThreshold;
 
     public AlertService(AlertRepository alertRepository, UserRepository userRepository, WebSocketService webSocketService) {
         this.alertRepository = alertRepository;
@@ -36,14 +41,14 @@ public class AlertService {
         }
 
         // 2. Alerta de Anomalía Eléctrica (Voltaje)
-        if (voltage != null && (voltage < VOLTAGE_MIN || voltage > VOLTAGE_MAX)) {
+        if (voltage != null && (voltage < voltageMin || voltage > voltageMax)) {
             String msg = "⚡ ¡ANOMALÍA DE VOLTAJE! El dispositivo " + deviceName + " registró " + voltage + "V. Riesgo para el hardware.";
             createAlert(user, "VOLTAGE_ANOMALY", msg);
         }
 
         // 3. Alerta de Pico de Potencia (Ejemplo: > 2000W para un socket común)
-        if (power != null && power > 2000.0) {
-            createAlert(user, "POWER_SPIKE", "🔥 PICO DE POTENCIA detectado en " + deviceName + ": " + power + "W.");
+        if (power != null && power > powerThreshold) {
+            createAlert(user, "POWER_SPIKE", "🔥 PICO DE POTENCIA detectado en " + deviceName + ": " + powerThreshold + "W.");
         }
     }
 
