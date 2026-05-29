@@ -26,6 +26,7 @@ public class EnergyBillService {
     private final EnergyBillRepository billRepository;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     
     @Value("${app.upload.dir:uploads/bills/}")
     private String uploadDir;
@@ -34,10 +35,14 @@ public class EnergyBillService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository, RestTemplate restTemplate) {
+    @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent}")
+    private String geminiApiUrl;
+
+    public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.billRepository = billRepository;
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
     // 📥 1. Método Principal que atrapa la Foto
     public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail) throws Exception {
@@ -77,7 +82,7 @@ public class EnergyBillService {
 
     // 🧠 2. El puente directo con Google Gemini 1.5
     private JsonNode callGeminiVisionAPI(Path imagePath) throws Exception {
-        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + geminiApiKey;
+        String apiUrl = geminiApiUrl + "?key=" + geminiApiKey;
         byte[] imageBytes = Files.readAllBytes(imagePath);
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
         String prompt = "Actúa como un asesor experto en facturas de energía eléctrica. Extrae de esta imagen: el total de kWh consumidos, el monto total de la factura, y la tarifa eléctrica aplicada. Devuélveme ÚNICA Y EXCLUSIVAMENTE un JSON válido con 4 llaves: \"totalKwh\" (decimal), \"totalAmount\" (decimal), \"electricityRate\" (decimal), y \"advice\" (string). No uses markdown.";
@@ -91,7 +96,7 @@ public class EnergyBillService {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, parts, JsonNode.class);
         String rawText = response.getBody().path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
         String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
-        return new ObjectMapper().readTree(cleanJson);
+        return objectMapper.readTree(cleanJson);
     }
     // 📋 3. Obtener el historial
     public List<EnergyBill> getUserBills(String userEmail) {
