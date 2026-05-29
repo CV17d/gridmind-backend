@@ -3,11 +3,15 @@ package com.gridmind.backend.service;
 import com.gridmind.backend.dto.RegisterUserRequest;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,14 +40,11 @@ public class UserService {
     public String processForgotPassword(String email) {
         User user = findByEmail(email);
         if (user == null) {
-            System.out.println("No se enviará correo de recuperación: Usuario no registrado (" + email + ")");
+            log.warn("Intento de recuperación de contraseña para correo no registrado: {}", email);
             return null; // Graceful exist to prevent user enumeration without throwing 500
         }
 
-        java.security.SecureRandom secureRandom = new java.security.SecureRandom();
-        byte[] tokenBytes = new byte[128]; // 1024 bits de entropía
-        secureRandom.nextBytes(tokenBytes);
-        String token = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+        String token = java.util.UUID.randomUUID().toString();
         user.setResetToken(token);
         user.setResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
