@@ -10,8 +10,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.validation.annotation.Validated;
+
 @RestController
 @RequestMapping("/api/v1/iot")
+@Validated
 public class IotController {
     private final DeviceRepository deviceRepository;
     private final EnergyConsumptionRepository energyRepository;
@@ -32,7 +40,7 @@ public class IotController {
     }
     // 📡 Nuevo endpoint para recibir telemetría vía JSON (Más moderno y seguro)
     @PostMapping("/telemetry")
-    public ResponseEntity<String> receiveTelemetry(@RequestBody TelemetryRequest request) {
+    public ResponseEntity<String> receiveTelemetry(@Valid @RequestBody TelemetryRequest request) {
         // Buscamos el dispositivo por su API Key (la llave secreta)
         Device device = deviceRepository.findByApiKey(request.apiKey).orElse(null);
 
@@ -62,9 +70,22 @@ public class IotController {
 
     // Clase auxiliar para el JSON
     public static class TelemetryRequest {
+        @NotBlank(message = "El API Key es obligatorio")
         public String apiKey;
+
+        @NotNull(message = "El voltaje es obligatorio")
+        @DecimalMin(value = "0.0", message = "El voltaje no puede ser menor a 0")
+        @DecimalMax(value = "1000.0", message = "El voltaje no puede ser mayor a 1000")
         public Double voltage;
+
+        @NotNull(message = "La corriente es obligatoria")
+        @DecimalMin(value = "0.0", message = "La corriente no puede ser menor a 0")
+        @DecimalMax(value = "1000.0", message = "La corriente no puede ser mayor a 1000")
         public Double current;
+
+        @NotNull(message = "La potencia es obligatoria")
+        @DecimalMin(value = "0.0", message = "La potencia no puede ser menor a 0")
+        @DecimalMax(value = "10000.0", message = "La potencia no puede ser mayor a 10000")
         public Double power;
     }
 
@@ -72,10 +93,10 @@ public class IotController {
     public ResponseEntity<String> registerIotConsumption(
             @PathVariable("esp32Id") String esp32Id,
             @RequestHeader("X-API-KEY") String apiKey,
-            @RequestParam("consumption") BigDecimal consumption,
-            @RequestParam(value = "voltage", required = false) Double voltage,
-            @RequestParam(value = "current", required = false) Double current,
-            @RequestParam(value = "power", required = false) Double power) {
+            @RequestParam("consumption") @DecimalMin("0.0") @DecimalMax("10000.0") BigDecimal consumption,
+            @RequestParam(value = "voltage", required = false) @DecimalMin("0.0") @DecimalMax("1000.0") Double voltage,
+            @RequestParam(value = "current", required = false) @DecimalMin("0.0") @DecimalMax("1000.0") Double current,
+            @RequestParam(value = "power", required = false) @DecimalMin("0.0") @DecimalMax("10000.0") Double power) {
         Device device = deviceRepository.findByEsp32Id(esp32Id).orElse(null);
         if (device == null || !device.getApiKey().equals(apiKey)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
