@@ -25,6 +25,7 @@ public class EnergyBillService {
 
     private final EnergyBillRepository billRepository;
     private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
     
     @Value("${app.upload.dir:uploads/bills/}")
     private String uploadDir;
@@ -33,9 +34,10 @@ public class EnergyBillService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository) {
+    public EnergyBillService(EnergyBillRepository billRepository, UserRepository userRepository, RestTemplate restTemplate) {
         this.billRepository = billRepository;
         this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
     }
     // 📥 1. Método Principal que atrapa la Foto
     public EnergyBill analyzeAndSaveBill(MultipartFile file, String userEmail) throws Exception {
@@ -86,7 +88,6 @@ public class EnergyBillService {
             Map.of("inline_data", inlineData)
         ))));
 
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(apiUrl, parts, JsonNode.class);
         String rawText = response.getBody().path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
         String cleanJson = rawText.replace("```json", "").replace("```", "").trim();
