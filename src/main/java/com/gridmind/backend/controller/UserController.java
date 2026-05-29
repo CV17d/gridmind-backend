@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -36,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
 
         User user = userService.findByEmail(request.getEmail());
 
@@ -44,9 +47,44 @@ public class UserController {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String accessToken = jwtService.generateToken(user.getEmail());
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        return new LoginResponse(token, user.getName());
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/api/v1/users/refresh-token");
+        cookie.setMaxAge(7 * 24 * 60 * 60); // 7 dias
+        response.addCookie(cookie);
+
+        return new LoginResponse(accessToken, user.getName());
+    }
+
+    @PostMapping("/refresh-token")
+    public LoginResponse refreshToken(HttpServletRequest request) {
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refresh_token".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken == null || !jwtService.validateRefreshToken(refreshToken)) {
+            throw new RuntimeException("Refresh token inválido o expirado");
+        }
+
+        String email = jwtService.extractUsername(refreshToken);
+        User user = userService.findByEmail(email);
+        
+        if (user == null) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+
+        String newAccessToken = jwtService.generateToken(user.getEmail());
+        return new LoginResponse(newAccessToken, user.getName());
     }
 
     @GetMapping("/me")

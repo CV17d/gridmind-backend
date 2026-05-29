@@ -22,11 +22,21 @@ public class JwtService {
     }
 
     public String generateToken(String email) {
-
         return Jwts.builder()
                 .setSubject(email)
+                .claim("type", "access")
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 15)) // 15 minutos
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("type", "refresh")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7)) // 7 dias
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -35,8 +45,20 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public boolean validateAccessToken(String token) {
+        if (isTokenExpired(token)) return false;
+        String type = extractClaim(token, claims -> claims.get("type", String.class));
+        return "access".equals(type) || type == null; // type == null for backward compatibility
+    }
+
+    public boolean validateRefreshToken(String token) {
+        if (isTokenExpired(token)) return false;
+        String type = extractClaim(token, claims -> claims.get("type", String.class));
+        return "refresh".equals(type);
+    }
+
     public boolean validateToken(String token) {
-        return !isTokenExpired(token);
+        return validateAccessToken(token);
     }
 
     private boolean isTokenExpired(String token) {

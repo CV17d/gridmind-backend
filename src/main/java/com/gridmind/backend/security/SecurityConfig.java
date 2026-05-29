@@ -39,7 +39,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/users/login", "/api/v1/users/register",
-                                "/api/v1/users/forgot-password", "/api/v1/users/reset-password")
+                                "/api/v1/users/forgot-password", "/api/v1/users/reset-password",
+                                "/api/v1/users/refresh-token")
                         .permitAll()
                         .requestMatchers("/api/v1/iot/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
