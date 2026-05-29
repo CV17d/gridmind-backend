@@ -4,6 +4,7 @@ import com.gridmind.backend.model.EnergyConsumption;
 import com.gridmind.backend.repository.EnergyConsumptionRepository;
 import com.gridmind.backend.model.User;
 import com.gridmind.backend.repository.UserRepository;
+import com.gridmind.backend.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,15 +24,15 @@ public class PredictiveService {
     @org.springframework.beans.factory.annotation.Value("${ia.service.url:http://localhost:5000/predict}")
     private String iaServiceUrl;
 
-    public PredictiveService(EnergyConsumptionRepository energyRepository, UserRepository userRepository) {
+    public PredictiveService(EnergyConsumptionRepository energyRepository, UserRepository userRepository, RestTemplate restTemplate) {
         this.energyRepository = energyRepository;
         this.userRepository = userRepository;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     public Map<String, Object> getForecast(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         // 1. Obtener historial real
         List<EnergyConsumption> history = new ArrayList<>(energyRepository.findHistoryForPrediction(user.getId()));
